@@ -1,11 +1,12 @@
 // Edit your site details here. They update on every page.
 // Images: put your files in the "images" folder (see images/README.txt).
 const SITE = {
-  name: "Khadija's Take",  
-  tagline: "Articals - Art - Daily Life - Updates",
+  name: "Khadija's Take",
+  tagline: "Articles - Art - Daily Life - Updates",
+  welcomeImage: "header.jpg",
   intro: "Welcome to my corner of the internet; no neutral stances here.",
   links: [
-    { text: "Email", url: "kadija0boughanmi@gmail.com" },
+    { text: "Email", url: "mailto:kadija0boughanmi@gmail.com" },
     { text: "Youtube", url: "https://www.youtube.com/@Anxious_batman" },
     { text: "Tiktok", url: "https://www.tiktok.com/@kkhhaaddiijjaa3?_r=1&_t=ZS-9AHR7cq6YGS" }
   ]
@@ -13,7 +14,7 @@ const SITE = {
 
 // To add a post, copy one block, give it a unique slug, and paste it at the top.
 // "image" is optional: a small picture shown next to the summary (leave it out or "" for none).
-// "body" is plain HTML: <p>, <h2>, <ul>, <img>, <a>, <pre><code> and so on.
+// "body": write plain text (each line becomes a paragraph) or HTML (<p>, <h2>, <ul>, <img>, <a>).
 const POSTS = [
   {
     slug: "Yakin-case",
