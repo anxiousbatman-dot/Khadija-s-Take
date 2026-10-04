@@ -5,6 +5,7 @@ const SITE = {
   tagline: "Articles - Art - Daily Life - Updates",
   welcomeImage: "",
   intro: "Welcome to my corner of the internet; no neutral stances here.",
+  disqusShortname: "",   // paste your Disqus shortname here to turn on comments
   links: [
     { text: "Email", url: "mailto:kadija0boughanmi@gmail.com" },
     { text: "Youtube", url: "https://www.youtube.com/@Anxious_batman" },
