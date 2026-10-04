@@ -2,10 +2,55 @@ const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 const sorted = [...POSTS].sort((a, b) => b.date.localeCompare(a.date));
 const postUrl = p => `post.html?slug=${encodeURIComponent(p.slug)}`;
-// Comments (Disqus). They only appear once SITE.disqusShortname is filled in posts.js.
+// "Your take" area: a heart like button with a shared count, plus Disqus comments if enabled.
+const LIKE_API = "https://api.counterapi.dev/v1/khadijas-take-blog"; // free counter service, no account needed
+const likeKey = slug => "like-" + slug.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+const readCount = d => Number(d && (d.count ?? d.value ?? 0)) || 0;
+
 function addComments(p) {
+  const section = main.querySelector("section");
+  const url = `${LIKE_API}/${likeKey(p.slug)}`;
+  const saved = "liked:" + p.slug;
+  let liked = false;
+  try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
+  let count = 0;
+
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    .take-bar { margin-top: 1.5rem; }
+    .like { display: inline-flex; align-items: center; gap: .5rem; margin: 0 .5rem .8rem; padding: .25rem .8rem .25rem .5rem; background: none; border: 1px solid var(--line); border-radius: 999px; font: inherit; color: var(--ink); cursor: pointer; }
+    .like svg path { fill: none; stroke: var(--head); stroke-width: 2; transition: fill .15s, stroke .15s; }
+    .like.liked svg path { fill: #e0245e; stroke: #e0245e; }
+    .like:focus-visible { outline: 2px dashed var(--link); outline-offset: 2px; }
+    #disqus_thread { margin: 0 .5rem; }
+  </style>`);
+
+  section.insertAdjacentHTML("beforeend", `
+    <h2 class="bar take-bar">Your take</h2>
+    <button class="like" id="like-btn" type="button" aria-pressed="false" aria-label="Like this post">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span id="like-count">0</span>
+    </button>
+    <div id="disqus_thread"></div>`);
+
+  const btn = document.getElementById("like-btn");
+  const num = document.getElementById("like-count");
+  const paint = () => {
+    btn.classList.toggle("liked", liked);
+    btn.setAttribute("aria-pressed", String(liked));
+    num.textContent = count;
+  };
+  paint();
+  fetch(url).then(r => r.json()).then(d => { count = readCount(d); paint(); }).catch(() => {});
+
+  btn.addEventListener("click", () => {
+    liked = !liked;
+    count = Math.max(0, count + (liked ? 1 : -1));
+    paint();
+    try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {}
+    fetch(`${url}/${liked ? "up" : "down"}`).then(r => r.json()).then(d => { count = readCount(d); paint(); }).catch(() => {});
+  });
+
   if (!SITE.disqusShortname) return;
-  main.querySelector("section").insertAdjacentHTML("beforeend", `<div id="disqus_thread" class="comments"></div>`);
   window.disqus_config = function () {
     this.page.url = location.href;   // each post has its own address (?slug=...)
     this.page.identifier = p.slug;   // keeps comments attached to the right post
