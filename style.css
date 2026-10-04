@@ -1,0 +1,123 @@
+:root {
+  --bg: #fdeed9;
+  --panel: #FDF8F8;
+  --strip: #ffadc6;
+  --bar: #E88FA9;
+  --line: #ffbdca04;
+  --head: #9e556b;
+  --ink: #5b4038;
+  --link: #C9829B;
+  --entry: #FDF8F8;
+  --deep: #6b4a41;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 0.85rem/1.65 Verdana, Geneva, sans-serif;
+  text-align: left;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px dashed var(--link); outline-offset: 2px; }
+
+.site { max-width: 56rem; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-top: 0; }
+
+/* Banner: add images/banner.jpg (about 900 x 170) and it fills this area */
+.banner {
+  display: flex;
+  align-items: flex-end;
+  height: 10.5rem;
+  padding: 2rem 2rem;
+  background: url("wow.jpg") center / cover no-repeat, linear-gradient(135deg, #f8ece8, #e4c8c2);
+}
+.brand {
+  font-family: Quicksand, Verdana, sans-serif;
+  font-weight: 300;
+  font-size: 2rem;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  color: var(--deep);
+  text-shadow: 0 0 8px #fff, 0 0 14px #fff;
+}
+.brand:hover { text-decoration: none; }
+.band { background: #FDF8F8; border-top: 6px solid #C9829B; padding: 0.5rem 1.25rem; text-align: right; }
+.band p { margin: 0; font-size: 0.78rem; letter-spacing: 0.12em; color: var(--deep); }
+
+/* Two columns */
+.cols { display: flex; align-items: flex-start; }
+aside { flex: none; width: 12.5rem; padding: 1rem 0.75rem; background: var(--strip); border-right: 1px solid var(--line); }
+main { flex: 1; min-width: 0; padding: 1rem; }
+
+.side-box { margin-bottom: 1rem; background: var(--panel); border: 1px solid var(--line); }
+.side-box h3 {
+  margin: 0;
+  padding: 0.15rem 0.5rem;
+  background: var(--head);
+  color: #fff;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.side-box ul { margin: 0; padding: 0.5rem 0.5rem 0.6rem 1.5rem; list-style: square; font-size: 0.78rem; }
+.side-box li::marker { color: var(--head); }
+
+/* Section header bars */
+section { margin-bottom: 1.25rem; }
+.bar {
+  margin: 0 0 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--bar);
+  border: 1px solid var(--line);
+  color: var(--head);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pad { padding: 0 0.5rem; }
+
+.greet { display: flex; gap: 1rem; padding: 0 0.5rem; }
+.greet p { margin: 0; flex: 1; }
+.greet img { flex: none; width: 5.5rem; height: 6.5rem; object-fit: cover; padding: 2px; background: #fff; border: 1px solid var(--line); }
+
+/* Post boxes */
+.entry { margin: 0 0.5rem 0.9rem; background: var(--entry); border: 1px solid var(--line); }
+.entry-title {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--head);
+}
+.entry-title a { color: var(--head); font-weight: 700; }
+.entry-body { display: flex; gap: 0.9rem; padding: 0.8rem; }
+.entry-body.full { display: block; }
+.entry-body p { margin: 0 0 0.6rem; }
+.entry-body > img { flex: none; width: 6.5rem; height: 6.5rem; object-fit: cover; padding: 2px; background: #fff; border: 1px solid var(--line); }
+
+/* Inside a full post */
+.post h2 { margin: 1.4rem 0 0.3rem; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--head); }
+.post > :first-child { margin-top: 0; }
+.post ul { padding-left: 1.4rem; list-style: square; }
+.post img { max-width: 100%; height: auto; padding: 2px; background: #fff; border: 1px solid var(--line); }
+.post blockquote { margin: 1rem 0; padding: 0.3rem 0.9rem; border-left: 3px solid var(--head); background: var(--panel); }
+.post pre { overflow-x: auto; padding: 0.8rem; background: var(--panel); border: 1px solid var(--line); }
+.post code { background: var(--panel); padding: 0 0.25rem; }
+.post pre code { padding: 0; }
+.back { padding: 0 0.5rem; }
+
+footer { padding: 0.9rem; text-align: center; border-top: 1px solid var(--line); background: var(--strip); color: var(--head); font-size: 0.72rem; letter-spacing: 0.06em; }
+
+@media (max-width: 720px) {
+  .cols { flex-direction: column; }
+  main { order: 1; width: 100%; }
+  aside { order: 2; width: 100%; border-right: 0; border-top: 1px solid var(--line); }
+  .brand { font-size: 1.5rem; letter-spacing: 0.12em; }
+  .greet, .entry-body { flex-direction: column; }
+}
