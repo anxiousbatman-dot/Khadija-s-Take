@@ -2,18 +2,26 @@ const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 const sorted = [...POSTS].sort((a, b) => b.date.localeCompare(a.date));
 const postUrl = p => `post.html?slug=${encodeURIComponent(p.slug)}`;
-// "Your take" area: a heart like button with a shared count, plus Disqus comments if enabled.
-const LIKE_API = "https://api.counterapi.dev/v1/khadijas-take-blog"; // free counter service, no account needed
-const likeKey = slug => "like-" + slug.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-const readCount = d => Number(d && (d.count ?? d.value ?? 0)) || 0;
+// "Your take" area: a heart like button with a shared count, plus comments (Google sign-in, stored in Firebase) once set up in posts.js.
+// Counts are kept by Abacus, a free counting service that needs no account. It can only count up,
+// so a like adds to one counter and an unlike adds to another. The number shown is likes minus unlikes.
+const COUNT_API = "https://abacus.jasoncameron.dev";
+const COUNT_NS = "khadijas-take-blog";
+const slugKey = slug => slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const countCall = (action, key) =>
+  fetch(`${COUNT_API}/${action}/${COUNT_NS}/${key}`, { cache: "no-store" })
+    .then(r => r.json())
+    .then(d => Number(d && d.value) || 0)
+    .catch(() => null);   // null means the counting service could not be reached
 
 function addComments(p) {
   const section = main.querySelector("section");
-  const url = `${LIKE_API}/${likeKey(p.slug)}`;
+  const keyUp = "like-" + slugKey(p.slug);
+  const keyDown = "unlike-" + slugKey(p.slug);
   const saved = "liked:" + p.slug;
   let liked = false;
   try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
-  let count = 0;
+  let likes = 0, unlikes = 0;
 
   document.head.insertAdjacentHTML("beforeend", `<style>
     .take-bar { margin-top: 1.5rem; }
@@ -21,7 +29,7 @@ function addComments(p) {
     .like svg path { fill: none; stroke: var(--head); stroke-width: 2; transition: fill .15s, stroke .15s; }
     .like.liked svg path { fill: #e0245e; stroke: #e0245e; }
     .like:focus-visible { outline: 2px dashed var(--link); outline-offset: 2px; }
-    #disqus_thread { margin: 0 .5rem; }
+    #comments-box { margin: 0 .5rem; }
   </style>`);
 
   section.insertAdjacentHTML("beforeend", `
@@ -30,35 +38,44 @@ function addComments(p) {
       <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
       <span id="like-count">0</span>
     </button>
-    <div id="disqus_thread"></div>`);
+    <div id="comments-box"></div>`);
 
   const btn = document.getElementById("like-btn");
   const num = document.getElementById("like-count");
   const paint = () => {
     btn.classList.toggle("liked", liked);
     btn.setAttribute("aria-pressed", String(liked));
-    num.textContent = count;
+    num.textContent = Math.max(0, likes - unlikes);
   };
   paint();
-  fetch(url).then(r => r.json()).then(d => { count = readCount(d); paint(); }).catch(() => {});
+
+  Promise.all([countCall("get", keyUp), countCall("get", keyDown)]).then(([a, b]) => {
+    likes = a || 0;
+    unlikes = b || 0;
+    paint();
+  });
 
   btn.addEventListener("click", () => {
     liked = !liked;
-    count = Math.max(0, count + (liked ? 1 : -1));
+    const isLike = liked;
+    if (isLike) likes++; else unlikes++;
     paint();
     try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {}
-    fetch(`${url}/${liked ? "up" : "down"}`).then(r => r.json()).then(d => { count = readCount(d); paint(); }).catch(() => {});
+    countCall("hit", isLike ? keyUp : keyDown).then(v => {
+      if (v === null) return;   // service unreachable: keep what is on screen
+      if (isLike) likes = v; else unlikes = v;
+      paint();
+    });
   });
 
-  if (!SITE.disqusShortname) return;
-  window.disqus_config = function () {
-    this.page.url = location.href;   // each post has its own address (?slug=...)
-    this.page.identifier = p.slug;   // keeps comments attached to the right post
-  };
-  const s = document.createElement("script");
-  s.src = `https://${SITE.disqusShortname}.disqus.com/embed.js`;
-  s.setAttribute("data-timestamp", +new Date());
-  document.body.appendChild(s);
+  const box = document.getElementById("comments-box");
+  if (!SITE.firebase || !SITE.firebase.apiKey) {
+    box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
+    return;
+  }
+  import("./comments.js")
+    .then(m => m.mountComments(box, p, SITE))
+    .catch(() => { box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`; });
 }
 
 // If a post body is plain text (no HTML tags), make each line its own paragraph.

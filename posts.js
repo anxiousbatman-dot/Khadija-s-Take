@@ -5,7 +5,13 @@ const SITE = {
   tagline: "Articles - Art - Daily Life - Updates",
   welcomeImage: "",
   intro: "Welcome to my corner of the internet; no neutral stances here.",
-  disqusShortname: "",   // paste your Disqus shortname here to turn on comments
+  adminEmail: "kadija0boughanmi@gmail.com",   // the Google account that can delete any comment
+  firebase: {   // paste your Firebase values here to turn on comments
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    appId: ""
+  },
   links: [
     { text: "Email", url: "mailto:kadija0boughanmi@gmail.com" },
     { text: "Youtube", url: "https://www.youtube.com/@Anxious_batman" },

@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Comments: anyone can read; only signed-in people can post (as themselves);
+    // you can delete your own comment, and the admin email can delete any comment.
+    match /comments/{id} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['postSlug', 'text', 'name', 'uid', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.postSlug is string
+        && request.resource.data.postSlug.size() > 0
+        && request.resource.data.postSlug.size() <= 100
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1000
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+
+      allow delete: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || (request.auth.token.email == 'kadija0boughanmi@gmail.com'
+                && request.auth.token.email_verified == true));
+    }
+  }
+}
