@@ -70,7 +70,7 @@ function addComments(p) {
       .then(m => m.mountFirebase({ btn, num, box, post: p, site: { ...SITE, firebase: cfg }, debug: dbg }))
       .catch(err => {
         console.warn("Firebase part failed to load:", err);
-        box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`;
+        box.innerHTML = `<p class="pad">♥</p>`;
       });
   });
 
