@@ -15,9 +15,20 @@ const countCall = (action, key) =>
     .then(d => Number(d && d.value) || 0)
     .catch(err => { console.warn("Like counter unreachable:", err); return null; });
 
+// The Firebase values live in config.js. Vercel makes that file when the site is deployed, from the
+// Environment Variables you typed into Vercel, so the values never sit in GitHub.
+// To test in VS Code, create config.js by hand (see config.example.js). If there is no config.js,
+// the values in posts.js are used instead.
+async function loadFirebaseConfig() {
+  try {
+    const m = await import("./config.js");
+    if (m.default && m.default.apiKey) return m.default;
+  } catch (e) { /* no config.js here: fall through */ }
+  return SITE.firebase && SITE.firebase.apiKey ? SITE.firebase : null;
+}
+
 function addComments(p) {
   const section = main.querySelector("section");
-  const useFirebase = !!(SITE.firebase && SITE.firebase.apiKey);
 
   document.head.insertAdjacentHTML("beforeend", `<style>
     .take-bar { margin-top: 1.5rem; }
@@ -40,50 +51,52 @@ function addComments(p) {
   const num = document.getElementById("like-count");
   const box = document.getElementById("comments-box");
 
-  if (useFirebase) {
+  loadFirebaseConfig().then(cfg => {
+    if (!cfg) return startWithoutFirebase();
     import("./comments.js")
-      .then(m => m.mountFirebase({ btn, num, box, post: p, site: SITE }))
+      .then(m => m.mountFirebase({ btn, num, box, post: p, site: { ...SITE, firebase: cfg } }))
       .catch(err => {
         console.warn("Firebase part failed to load:", err);
         box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`;
       });
-    return;
-  }
-
-  // Not set up yet: likes use Abacus, and the comment area shows a notice.
-  box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
-  const saved = "liked:" + p.slug;
-  const keyUp = "like-" + slugKey(p.slug);
-  const keyDown = "unlike-" + slugKey(p.slug);
-  let liked = false;
-  try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
-  let likes = 0, unlikes = 0;
-
-  const paint = () => {
-    btn.classList.toggle("liked", liked);
-    btn.setAttribute("aria-pressed", String(liked));
-    num.textContent = Math.max(0, likes - unlikes);
-  };
-  paint();
-
-  Promise.all([countCall("get", keyUp), countCall("get", keyDown)]).then(([a, b]) => {
-    likes = a || 0;
-    unlikes = b || 0;
-    paint();
   });
 
-  btn.addEventListener("click", () => {
-    liked = !liked;
-    const isLike = liked;
-    if (isLike) likes++; else unlikes++;
+  function startWithoutFirebase() {
+    // Not set up yet: likes use Abacus, and the comment area shows a notice.
+    box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
+    const saved = "liked:" + p.slug;
+    const keyUp = "like-" + slugKey(p.slug);
+    const keyDown = "unlike-" + slugKey(p.slug);
+    let liked = false;
+    try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
+    let likes = 0, unlikes = 0;
+
+    const paint = () => {
+      btn.classList.toggle("liked", liked);
+      btn.setAttribute("aria-pressed", String(liked));
+      num.textContent = Math.max(0, likes - unlikes);
+    };
     paint();
-    try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {}
-    countCall("hit", isLike ? keyUp : keyDown).then(v => {
-      if (v === null) return;   // service unreachable: keep what is on screen
-      if (isLike) likes = v; else unlikes = v;
+
+    Promise.all([countCall("get", keyUp), countCall("get", keyDown)]).then(([a, b]) => {
+      likes = a || 0;
+      unlikes = b || 0;
       paint();
     });
-  });
+
+    btn.addEventListener("click", () => {
+      liked = !liked;
+      const isLike = liked;
+      if (isLike) likes++; else unlikes++;
+      paint();
+      try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {}
+      countCall("hit", isLike ? keyUp : keyDown).then(v => {
+        if (v === null) return;   // service unreachable: keep what is on screen
+        if (isLike) likes = v; else unlikes = v;
+        paint();
+      });
+    });
+  }
 }
 
 // If a post body is plain text (no HTML tags), make each line its own paragraph.
