@@ -1,4 +1,3 @@
-import { SpeedInsights } from "@vercel/speed-insights/next"
 const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 // Newest first, by date. Used for "Latest post", "Recent posts" and Updates.
