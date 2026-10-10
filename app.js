@@ -125,6 +125,7 @@ document.getElementById("sidebar").innerHTML =
   side("Playlists", (SITE.playlists || []).map(playlistLink), "playlists") +
   side("Links", SITE.links.filter(l => l.url).map(l => `<a href="${l.url}">${l.text}</a>`));
 
+document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap">`);
 document.head.insertAdjacentHTML("beforeend", `<style>
   .side-box a[aria-current] { font-weight: 700; text-decoration: underline; }
   .side-box.playlists ul { padding-left: .6rem; list-style: none; }
@@ -138,6 +139,15 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   .note svg { flex: none; margin-top: .25rem; fill: var(--ink); }
   .note p { margin: 0; }
   .note-date { display: block; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .about-card { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.4rem; align-items: start; padding: 0 .5rem; }
+  .about-pic { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 5; overflow: hidden; background: var(--strip); border: 3px solid var(--head); border-radius: 18px; }
+  .about-pic span { padding: 1rem; text-align: center; font: 700 1.3rem/1.2 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--head); }
+  .about-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .about-hi { margin: 0; font: 500 1.25rem/1.25 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--ink); }
+  .about-name { font-weight: 700; font-size: 2.1rem; }
+  .about-nick { display: block; margin: .15rem 0 1.1rem; font: 700 clamp(2.6rem, 7vw, 3.6rem)/.95 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--head); }
+  .about-text p:not(.about-hi) { margin: 0 0 1rem; }
+  @media (max-width: 720px) { .about-card { grid-template-columns: 1fr; } .about-pic { max-height: 24rem; } }
 </style>`);
 
 const main = document.getElementById("main");
@@ -163,12 +173,27 @@ const card = p => `
   </article>`;
 const bell = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 22zm6-6v-5a6 6 0 0 0-4.5-5.8v-.7a1.5 1.5 0 0 0-3 0v.7A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
 
+// Introduction card: picture on the left, "Hi, I'm ..." and your text on the right
+function aboutCard() {
+  const paras = (SITE.about || "").split("\n").map(t => t.trim()).filter(Boolean)
+    .map(t => `<p dir="auto">${t}</p>`).join("");
+  const nick = SITE.aboutNickname
+    ? `<p class="about-hi">You can call me <strong class="about-nick">${SITE.aboutNickname}</strong></p>` : "";
+  return `
+    <div class="about-card">
+      <div class="about-pic"><span>my picture</span>${img(SITE.aboutPicture, SITE.aboutName)}</div>
+      <div class="about-text">
+        <p class="about-hi">Hi, I'm <strong class="about-name">${SITE.aboutName}</strong></p>
+        ${nick}
+        ${paras}
+      </div>
+    </div>`;
+}
+
 function homePage() {
-  const about = (SITE.about || "").split("\n").map(t => t.trim()).filter(Boolean)
-    .map(t => `<p class="pad" dir="auto">${t}</p>`).join("");
   return (
     section("Greetings", `<div class="greet"><p>${SITE.intro}</p>${img(SITE.welcomeImage)}</div>`) +
-    section("Introduction", about || `<p class="pad">Coming soon.</p>`) +
+    section("Introduction", aboutCard()) +
     section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`)
   );
 }
