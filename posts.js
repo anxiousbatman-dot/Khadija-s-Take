@@ -5,6 +5,8 @@ const SITE = {
   tagline: "Articles - Art - Daily Life - Updates",
   welcomeImage: "",
   intro: "Welcome to my corner of the internet; no neutral stances here.",
+  // About me: shown in the "Introduction" box on the Home page. Each new line becomes its own paragraph.
+  about: `Write a few sentences about yourself here: who you are, what you write about, and why you started this blog.`,
   adminEmail: "kadija0boughanmi@gmail.com",   // the Google account that can delete any comment
   firebase: {   // paste your Firebase values here to turn on comments
     apiKey: "",
@@ -20,6 +22,7 @@ const SITE = {
 };
 
 // To add a post, copy one block and give it a unique slug.
+// "category" decides which section it appears in: articles, art or daily-life.
 // Posts show on the site in the same order as here: the first one in the list is on top.
 // "image" is optional: a small picture shown next to the summary (leave it out or "" for none).
 // "body": write plain text (each line becomes a paragraph) or HTML (<p>, <h2>, <ul>, <img>, <a>).
@@ -28,6 +31,7 @@ const POSTS = [
     slug: "Yakin-case",
     title: "Yakin’s Case and the Illusion of the Perfect Victim",
     date: "2026-10-04",
+    category: "articles",   // articles, art or daily-life
     image: "",
     summary: "My opinions on the yakin case",
     body: `
@@ -122,6 +126,7 @@ const POSTS = [
     slug: "racism-repackaged-as-patriotism",
     title: "Racism Re-packaged as Patriotism",
     date: "2026-10-10",
+    category: "articles",   // articles, art or daily-life
     image: "",
     summary: "My opinion on racism in Tunisia and how it hides behind the excuse of protecting the country.",
     body: `

@@ -1,7 +1,7 @@
 const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-// Posts show in the same order as in posts.js (first one on top).
-const sorted = [...POSTS];
+// Newest first, by date. Used for "Latest post", "Recent posts" and Updates.
+const byDate = [...POSTS].sort((x, y) => y.date.localeCompare(x.date));
 const postUrl = p => `post.html?slug=${encodeURIComponent(p.slug)}`;
 // "Your take" area: a heart like button and the comments.
 // Once Firebase is set up in posts.js, likes and comments both live in Firebase (see comments.js).
@@ -99,21 +99,102 @@ document.querySelectorAll("[data-site-name]").forEach(el => (el.textContent = SI
 document.querySelectorAll("[data-site-tagline]").forEach(el => (el.textContent = SITE.tagline));
 document.getElementById("year").textContent = new Date().getFullYear();
 
+// Sections of the site (shown in the Menu box). Each post belongs to one through its "category" in posts.js.
+const SECTIONS = [
+  { id: "home", label: "Home" },
+  { id: "articles", label: "Articles" },
+  { id: "art", label: "Art" },
+  { id: "daily-life", label: "Daily Life" },
+  { id: "updates", label: "Updates" }
+];
+const catOf = p => p.category || "articles";
+const KIND = { articles: "article", art: "art post", "daily-life": "daily life post" };
+const sectionHref = id => `index.html#${id}`;
+
 // Left sidebar
-const box = (title, items) =>
+const side = (title, items) =>
   `<div class="side-box"><h3>${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
 document.getElementById("sidebar").innerHTML =
-  box("Menu", [`<a href="index.html">Home</a>`]) +
-  box("Recent posts", sorted.slice(0, 6).map(p => `<a href="${postUrl(p)}">${p.title}</a>`)) +
-  box("Links", SITE.links.map(l => `<a href="${l.url}">${l.text}</a>`));
+  side("Menu", SECTIONS.map(s => `<a href="${sectionHref(s.id)}" data-sec="${s.id}">${s.label}</a>`)) +
+  side("Recent posts", byDate.slice(0, 6).map(p => `<a href="${postUrl(p)}">${p.title}</a>`)) +
+  side("Links", SITE.links.map(l => `<a href="${l.url}">${l.text}</a>`));
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+  .side-box a[aria-current] { font-weight: 700; text-decoration: underline; }
+  .notes { margin: 0 .5rem; padding: 0; list-style: none; }
+  .note { display: flex; gap: .7rem; align-items: flex-start; margin-bottom: .6rem; padding: .6rem .8rem; background: var(--entry); border: 1px solid var(--line); }
+  .note svg { flex: none; margin-top: .25rem; fill: var(--ink); }
+  .note p { margin: 0; }
+  .note-date { display: block; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+</style>`);
 
 const main = document.getElementById("main");
+const setActive = id =>
+  document.querySelectorAll("[data-sec]").forEach(a =>
+    a.dataset.sec === id ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+
+// Pieces used by the section pages
+const shortDate = d => {
+  const dt = new Date(d + "T00:00:00");
+  const opts = { month: "long", day: "numeric" };
+  if (dt.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+  return dt.toLocaleDateString("en-US", opts);
+};
+const section = (title, inner) => `<section><h2 class="bar">${title}</h2>${inner}</section>`;
+const card = p => `
+  <article class="entry">
+    <h3 class="entry-title"><a href="${postUrl(p)}">${p.title} - ${fmt(p.date)}</a></h3>
+    <div class="entry-body">
+      ${img(p.image, p.title)}
+      <div><p>${p.summary}</p><p><a href="${postUrl(p)}">Read more</a></p></div>
+    </div>
+  </article>`;
+const bell = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 22zm6-6v-5a6 6 0 0 0-4.5-5.8v-.7a1.5 1.5 0 0 0-3 0v.7A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
+
+function homePage() {
+  const about = (SITE.about || "").split("\n").map(t => t.trim()).filter(Boolean)
+    .map(t => `<p class="pad" dir="auto">${t}</p>`).join("");
+  return (
+    section("Greetings", `<div class="greet"><p>${SITE.intro}</p>${img(SITE.welcomeImage)}</div>`) +
+    section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`) +
+    section("Introduction", about || `<p class="pad">Coming soon.</p>`)
+  );
+}
+
+// Articles, Art and Daily Life: the posts of that category, in the same order as in posts.js
+function listPage(id) {
+  const items = POSTS.filter(p => catOf(p) === id);
+  const label = SECTIONS.find(s => s.id === id).label;
+  return section(label, items.length ? items.map(card).join("") : `<p class="pad">Nothing here yet. Check back soon.</p>`);
+}
+
+// Updates: every post shows up here like a notification, newest first
+function updatesPage() {
+  return section("Updates", byDate.length
+    ? `<ul class="notes">${byDate.map(p => `
+        <li class="note">${bell}<div>
+          <span class="note-date">${shortDate(p.date)}</span>
+          <p>New ${KIND[catOf(p)] || "post"} posted: <a href="${postUrl(p)}">${p.title}</a></p>
+        </div></li>`).join("")}</ul>`
+    : `<p class="pad">No updates yet.</p>`);
+}
+
+function showSection() {
+  const h = location.hash.replace("#", "");
+  const id = SECTIONS.some(s => s.id === h) ? h : "home";
+  const label = SECTIONS.find(s => s.id === id).label;
+  document.title = id === "home" ? SITE.name : `${label} - ${SITE.name}`;
+  main.innerHTML = id === "home" ? homePage() : id === "updates" ? updatesPage() : listPage(id);
+  setActive(id);
+}
+
 const slug = new URLSearchParams(location.search).get("slug");
 
-if (!document.body.dataset.page && location.pathname.endsWith("post.html")) {
+if (location.pathname.endsWith("post.html")) {
   // Single post
   const p = POSTS.find(x => x.slug === slug);
   if (p) {
+    const sec = SECTIONS.find(s => s.id === catOf(p)) || SECTIONS[1];
     document.title = `${p.title} - ${SITE.name}`;
     main.innerHTML = `
       <section>
@@ -122,8 +203,9 @@ if (!document.body.dataset.page && location.pathname.endsWith("post.html")) {
           <h3 class="entry-title">Posted ${fmt(p.date)}</h3>
           <div class="entry-body full post">${formatBody(p.body)}</div>
         </article>
-        <p class="back"><a href="index.html">Back to all posts</a></p>
+        <p class="back"><a href="${sectionHref(sec.id)}">Back to ${sec.label}</a></p>
       </section>`;
+    setActive(sec.id);
     addComments(p);
   } else {
     document.title = `Post not found - ${SITE.name}`;
@@ -131,26 +213,10 @@ if (!document.body.dataset.page && location.pathname.endsWith("post.html")) {
       <section>
         <h2 class="bar">Post not found</h2>
         <p class="pad">That post doesn't exist. Check the link or pick one from the sidebar.</p>
-        <p class="back"><a href="index.html">Back to all posts</a></p>
+        <p class="back"><a href="${sectionHref("home")}">Back to Home</a></p>
       </section>`;
   }
 } else {
-  // Home page
-  document.title = SITE.name;
-  main.innerHTML = `
-    <section>
-      <h2 class="bar">Greetings</h2>
-      <div class="greet"><p>${SITE.intro}</p>${img(SITE.welcomeImage)}</div>
-    </section>
-    <section>
-      <h2 class="bar">Latest posts</h2>
-      ${sorted.length ? sorted.map(p => `
-        <article class="entry">
-          <h3 class="entry-title"><a href="${postUrl(p)}">${p.title} - ${fmt(p.date)}</a></h3>
-          <div class="entry-body">
-            ${img(p.image, p.title)}
-            <div><p>${p.summary}</p><p><a href="${postUrl(p)}">Read more</a></p></div>
-          </div>
-        </article>`).join("") : `<p class="pad">No posts yet. Add your first one in posts.js.</p>`}
-    </section>`;
+  showSection();
+  window.addEventListener("hashchange", () => { showSection(); window.scrollTo(0, 0); });
 }
