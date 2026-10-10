@@ -9,7 +9,7 @@ const SITE = {
   aboutPicture: "images/my-picture.jpg",   // your picture; until it exists, a "my picture" box shows
   // Your introduction. Each new line becomes its own paragraph.
   about: `a 21 year old student-artist at ISG-T, passionate about everything artistic, creative and social.
-i focus on giving my personal takes and views and political and social matters espacially in tunisia. i love sharing my takes and learning more about diffrent opinions.
+i focus on giving my personal takes and views about political and social matters espacially in tunisia. i love sharing my takes and learning more about diffrent opinions.
 if you're intrested in art or social issues make sure to follow my blog to hear my takes and share yours.`,
   adminEmail: "kadija0boughanmi@gmail.com",   // the Google account that can delete any comment
   firebase: {   // paste your Firebase values here to turn on comments
