@@ -146,7 +146,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
   .about-hi { margin: 0; font: 500 1.25rem/1.25 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--ink); }
   .about-name { font-weight: 700; font-size: 2.1rem; }
   .about-nick { display: block; margin: .15rem 0 1.1rem; font: 700 clamp(2.6rem, 7vw, 3.6rem)/.95 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--head); }
-  .about-text p:not(.about-hi) { margin: 0 0 1rem; }
+  .about-text p:not(.about-hi) { margin: 0 0 .7rem; }
   @media (max-width: 720px) { .about-card { grid-template-columns: 1fr; } .about-pic { max-height: 24rem; } }
 </style>`);
 
@@ -181,7 +181,7 @@ function aboutCard() {
     ? `<p class="about-hi">You can call me <strong class="about-nick">${SITE.aboutNickname}</strong></p>` : "";
   return `
     <div class="about-card">
-      <div class="about-pic"><span>my picture</span>${img(SITE.aboutPicture, SITE.aboutName)}</div>
+      <div class="about-pic"><span>my picture</span></div>
       <div class="about-text">
         <p class="about-hi">Hi, I'm <strong class="about-name">${SITE.aboutName}</strong></p>
         ${nick}
@@ -190,9 +190,28 @@ function aboutCard() {
     </div>`;
 }
 
+// Finds your photo. It tries the address in posts.js first, then my-picture.jpg / .jpeg / .png / .webp
+// in the images folder and next to index.html, and adds the first one that exists.
+function loadAboutPicture() {
+  const holder = document.querySelector(".about-pic");
+  if (!holder) return;
+  const urls = SITE.aboutPicture ? [SITE.aboutPicture] : [];
+  for (const dir of ["images/", ""]) {
+    for (const ext of ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG"]) urls.push(`${dir}my-picture.${ext}`);
+  }
+  const list = [...new Set(urls)];
+  const tryNext = i => {
+    if (i >= list.length) return;   // none found: the "my picture" box stays
+    const im = new Image();
+    im.onload = () => { im.alt = SITE.aboutName || ""; holder.appendChild(im); };
+    im.onerror = () => tryNext(i + 1);
+    im.src = list[i];
+  };
+  tryNext(0);
+}
+
 function homePage() {
   return (
-    section("Greetings", `<div class="greet"><p>${SITE.intro}</p>${img(SITE.welcomeImage)}</div>`) +
     section("Introduction", aboutCard()) +
     section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`)
   );
@@ -223,6 +242,7 @@ function showSection() {
   document.title = id === "home" ? SITE.name : `${label} - ${SITE.name}`;
   main.innerHTML = id === "home" ? homePage() : id === "updates" ? updatesPage() : listPage(id);
   setActive(id);
+  if (id === "home") loadAboutPicture();
 }
 
 const slug = new URLSearchParams(location.search).get("slug");

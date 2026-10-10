@@ -3,19 +3,13 @@
 const SITE = {
   name: "Khadija's Take",
   tagline: "",   // the text under the banner (left empty on purpose)
-  welcomeImage: "",
-  intro: "Welcome to my corner of the internet; no neutral stances here.",
   // Introduction card on the Home page (your picture, your names and your text).
   aboutName: "Khadija",
   aboutNickname: "Douja",   // leave "" to hide the "You can call me" line
   aboutPicture: "images/my-picture.jpg",   // your picture; until it exists, a "my picture" box shows
-  // Your introduction. Each new line becomes its own paragraph, so keep a blank line between them.
-  about: `hello!!
-
-i'm khadija, a 21 year old student-artist at ISG-T, passionate about everything artistic, creative and social.
-
+  // Your introduction. Each new line becomes its own paragraph.
+  about: `hello!! i'm khadija, a 21 year old student-artist at ISG-T, passionate about everything artistic, creative and social.
 i focus on giving my personal takes and views and political and social matters espacially in tunisia. i love sharing my takes and learning more about diffrent opinions.
-
 if you're intrested in art or social issues make sure to follow my blog to hear my takes and share yours.`,
   adminEmail: "kadija0boughanmi@gmail.com",   // the Google account that can delete any comment
   firebase: {   // paste your Firebase values here to turn on comments
