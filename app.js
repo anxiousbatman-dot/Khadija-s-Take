@@ -112,15 +112,27 @@ const KIND = { articles: "article", art: "art post", "daily-life": "daily life p
 const sectionHref = id => `index.html#${id}`;
 
 // Left sidebar
-const side = (title, items) =>
-  `<div class="side-box"><h3>${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+const side = (title, items, cls = "") =>
+  `<div class="side-box ${cls}"><h3>${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+// Small pink tile with a music note. If the playlist picture exists it covers the tile.
+const noteIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>`;
+const playlistLink = pl =>
+  `<a class="pl" href="${pl.url}" target="_blank" rel="noopener"><span class="pl-img">${noteIcon}${
+    pl.image ? `<img src="${pl.image}" alt="" onerror="this.remove()">` : ""
+  }</span><span>${pl.name}</span></a>`;
 document.getElementById("sidebar").innerHTML =
   side("Menu", SECTIONS.map(s => `<a href="${sectionHref(s.id)}" data-sec="${s.id}">${s.label}</a>`)) +
-  side("Recent posts", byDate.slice(0, 6).map(p => `<a href="${postUrl(p)}">${p.title}</a>`)) +
-  side("Links", SITE.links.map(l => `<a href="${l.url}">${l.text}</a>`));
+  side("Playlists", (SITE.playlists || []).map(playlistLink), "playlists") +
+  side("Links", SITE.links.filter(l => l.url).map(l => `<a href="${l.url}">${l.text}</a>`));
 
 document.head.insertAdjacentHTML("beforeend", `<style>
   .side-box a[aria-current] { font-weight: 700; text-decoration: underline; }
+  .side-box.playlists ul { padding-left: .6rem; list-style: none; }
+  .side-box.playlists li { margin: .4rem 0; }
+  .pl { display: flex; align-items: center; gap: .55rem; }
+  .pl-img { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; overflow: hidden; background: var(--head); border: 1px solid var(--line); border-radius: 4px; }
+  .pl-img svg { width: 1.1rem; height: 1.1rem; fill: #fff; }
+  .pl-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .notes { margin: 0 .5rem; padding: 0; list-style: none; }
   .note { display: flex; gap: .7rem; align-items: flex-start; margin-bottom: .6rem; padding: .6rem .8rem; background: var(--entry); border: 1px solid var(--line); }
   .note svg { flex: none; margin-top: .25rem; fill: var(--ink); }
@@ -156,8 +168,8 @@ function homePage() {
     .map(t => `<p class="pad" dir="auto">${t}</p>`).join("");
   return (
     section("Greetings", `<div class="greet"><p>${SITE.intro}</p>${img(SITE.welcomeImage)}</div>`) +
-    section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`) +
-    section("Introduction", about || `<p class="pad">Coming soon.</p>`)
+    section("Introduction", about || `<p class="pad">Coming soon.</p>`) +
+    section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`)
   );
 }
 
