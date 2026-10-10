@@ -104,11 +104,11 @@ const SECTIONS = [
   { id: "home", label: "Home" },
   { id: "articles", label: "Articles" },
   { id: "art", label: "Art" },
-  { id: "daily-life", label: "Daily Life" },
+  { id: "diary", label: "Diary" },
   { id: "updates", label: "Updates" }
 ];
 const catOf = p => p.category || "articles";
-const KIND = { articles: "article", art: "art post", "daily-life": "daily life post" };
+const KIND = { articles: "article", art: "art post", "diary": "diary post" };
 const sectionHref = id => `index.html#${id}`;
 
 // Left sidebar
