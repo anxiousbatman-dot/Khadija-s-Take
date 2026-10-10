@@ -19,12 +19,14 @@ const countCall = (action, key) =>
 // Environment Variables you typed into Vercel, so the values never sit in GitHub.
 // To test in VS Code, create config.js by hand (see config.example.js). If there is no config.js,
 // the values in posts.js are used instead.
+let fbSource = "nowhere";
 async function loadFirebaseConfig() {
   try {
     const m = await import("./config.js");
-    if (m.default && m.default.apiKey) return m.default;
+    if (m.default && m.default.apiKey) { fbSource = "config.js"; return m.default; }
   } catch (e) { /* no config.js here: fall through */ }
-  return SITE.firebase && SITE.firebase.apiKey ? SITE.firebase : null;
+  if (SITE.firebase && SITE.firebase.apiKey) { fbSource = "posts.js"; return SITE.firebase; }
+  return null;
 }
 
 function addComments(p) {
@@ -51,10 +53,21 @@ function addComments(p) {
   const num = document.getElementById("like-count");
   const box = document.getElementById("comments-box");
 
+  // Add  &debug=1  to a post's address to see a small checklist of what is working and what is not.
+  let dbg = () => {};
+  if (new URLSearchParams(location.search).has("debug")) {
+    section.insertAdjacentHTML("beforeend", `<pre id="dbg" style="margin:.8rem .5rem;padding:.6rem;white-space:pre-wrap;background:#fff;color:#222;border:2px dashed #888;font-size:.8rem">Checks (you only see this because the address has debug in it):</pre>`);
+    dbg = line => { document.getElementById("dbg").textContent += "\n" + line; };
+    dbg("Page address: " + location.host);
+  }
+
   loadFirebaseConfig().then(cfg => {
+    dbg(cfg
+      ? `Firebase keys found in ${fbSource} (project: ${cfg.projectId})`
+      : "NO Firebase keys found, neither in config.js nor in posts.js");
     if (!cfg) return startWithoutFirebase();
     import("./comments.js")
-      .then(m => m.mountFirebase({ btn, num, box, post: p, site: { ...SITE, firebase: cfg } }))
+      .then(m => m.mountFirebase({ btn, num, box, post: p, site: { ...SITE, firebase: cfg }, debug: dbg }))
       .catch(err => {
         console.warn("Firebase part failed to load:", err);
         box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`;
@@ -62,6 +75,7 @@ function addComments(p) {
   });
 
   function startWithoutFirebase() {
+    dbg("So likes use the old counter (it does not save properly) and comments are switched off.");
     // Not set up yet: likes use Abacus, and the comment area shows a notice.
     box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
     const saved = "liked:" + p.slug;

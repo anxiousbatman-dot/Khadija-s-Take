@@ -3,15 +3,98 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp }
+import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, increment, query, where, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const MAX = 1000;
 
-export function mountComments(box, post, site) {
+// A picture is shrunk into a small JPEG and kept as text inside the comment itself.
+// (Firestore holds up to 1 MiB per comment, so each picture is kept to about 110 KB.)
+const IMG_PREFIX = "data:image/jpeg;base64,";
+const IMG_MAX_CHARS = 150000;
+function shrinkPicture(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith("image/")) return reject(new Error("not-image"));
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      URL.revokeObjectURL(url);
+      for (const side of [800, 640, 480, 360]) {
+        const scale = Math.min(1, side / Math.max(im.width, im.height));
+        const w = Math.max(1, Math.round(im.width * scale));
+        const h = Math.max(1, Math.round(im.height * scale));
+        const cv = document.createElement("canvas");
+        cv.width = w;
+        cv.height = h;
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#fff";   // see-through parts of a PNG become white
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(im, 0, 0, w, h);
+        for (const q of [0.75, 0.6, 0.45]) {
+          const out = cv.toDataURL("image/jpeg", q);
+          if (out.length <= IMG_MAX_CHARS) return resolve(out);
+        }
+      }
+      reject(new Error("too-big"));
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error("not-image")); };
+    im.src = url;
+  });
+}
+
+const slugKey = slug => slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// Sets up Firebase once, then starts the likes and the comments.
+export function mountFirebase({ btn, num, box, post, site, debug = () => {} }) {
   const app = initializeApp(site.firebase);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  mountLikes(btn, num, post, db, debug);
+  mountComments(box, post, site, auth, db, debug);
+}
+
+// Heart button: one shared counter per post in Firestore, "liked" is remembered in this browser.
+function mountLikes(btn, num, post, db, debug) {
+  const ref = doc(db, "likes", slugKey(post.slug));
+  const saved = "liked:" + post.slug;
+  let liked = false;
+  try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
+  let total = 0;
+  const remember = () => { try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {} };
+  const paint = () => {
+    btn.classList.toggle("liked", liked);
+    btn.setAttribute("aria-pressed", String(liked));
+    num.textContent = Math.max(0, total);
+  };
+  paint();
+
+  onSnapshot(ref,
+    snap => {
+      total = snap.exists() ? Number(snap.data().count) || 0 : 0;
+      paint();
+      debug("Likes: reading OK, saved count = " + total);
+    },
+    err => {
+      console.warn("Likes couldn't load:", err);
+      debug("Likes: READ FAILED (" + err.code + ") " + err.message);
+    });
+
+  btn.addEventListener("click", () => {
+    liked = !liked;
+    remember();
+    paint();
+    if (!liked && total <= 0) return;   // nothing to take away
+    setDoc(ref, { count: increment(liked ? 1 : -1) }, { merge: true }).then(() => debug("Like saved in the database")).catch(err => {
+      console.warn("Like couldn't be saved:", err);
+      debug("Like NOT saved (" + err.code + ") " + err.message);
+      liked = !liked;   // put the heart back
+      remember();
+      paint();
+    });
+  });
+}
+
+function mountComments(box, post, site, auth, db, debug) {
 
   if (!document.getElementById("cm-style")) {
     document.head.insertAdjacentHTML("beforeend", `<style id="cm-style">
@@ -31,6 +114,10 @@ export function mountComments(box, post, site) {
       .cm-head { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
       .cm-del { margin-left: auto; padding: 0; font: inherit; font-size: .8rem; color: var(--ink); text-decoration: underline; background: none; border: 0; cursor: pointer; }
       .cm-text { margin: .4rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .cm-pic { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: .5rem; }
+      .cm-pic img { max-width: 100%; max-height: 6rem; border: 1px solid var(--line); border-radius: 4px; }
+      .cm-pic .cm-del { margin-left: 0; }
+      .cm-img { display: block; max-width: 100%; max-height: 22rem; margin-top: .6rem; border: 1px solid var(--line); border-radius: 4px; }
       .cm button:focus-visible, .cm textarea:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
     </style>`);
   }
@@ -41,6 +128,11 @@ export function mountComments(box, post, site) {
       <form class="cm-form" id="cm-form" hidden>
         <label class="cm-label" for="cm-text">Write your take</label>
         <textarea id="cm-text" rows="4" maxlength="${MAX}" required></textarea>
+        <div class="cm-pic">
+          <button class="cm-btn cm-ghost" type="button" id="cm-add-pic">Add a picture (optional)</button>
+          <input type="file" id="cm-file" accept="image/*" hidden>
+          <span id="cm-pic-box" hidden><img id="cm-pic-prev" alt="Preview of your picture"> <button class="cm-del" type="button" id="cm-pic-x">Remove picture</button></span>
+        </div>
         <div class="cm-row"><span id="cm-left">${MAX}</span><button class="cm-btn" type="submit">Post comment</button></div>
       </form>
       <p class="cm-msg" id="cm-msg" role="status"></p>
@@ -111,6 +203,14 @@ export function mountComments(box, post, site) {
       text.dir = "auto";
       text.textContent = c.text;   // textContent keeps comments from running as code
       li.append(head, text);
+      if (typeof c.image === "string" && c.image.startsWith(IMG_PREFIX)) {
+        const pic = document.createElement("img");
+        pic.className = "cm-img";
+        pic.src = c.image;
+        pic.alt = "Picture attached to this comment";
+        pic.loading = "lazy";
+        li.append(pic);
+      }
       ul.append(li);
     });
   }
@@ -120,14 +220,41 @@ export function mountComments(box, post, site) {
     snap => {
       comments = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ms(b) - ms(a));
       renderList();
+      debug("Comments: reading OK, " + comments.length + " comment(s) saved for this post");
     },
-    () => say("Comments couldn't load right now.")
+    err => {
+      say("Comments couldn't load right now.");
+      debug("Comments: READ FAILED (" + err.code + ") " + err.message);
+    }
   );
 
   onAuthStateChanged(auth, u => {
     user = u;
+    debug(u ? "Signed in as " + (u.displayName || "unknown") : "Not signed in");
     renderAuth();
     renderList();
+  });
+
+  let pic = null;   // the shrunk picture waiting to be sent, if any
+  const clearPic = () => { pic = null; $("cm-pic-box").hidden = true; $("cm-pic-prev").removeAttribute("src"); };
+  $("cm-add-pic").onclick = () => $("cm-file").click();
+  $("cm-pic-x").onclick = clearPic;
+  $("cm-file").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    say("Preparing your picture...");
+    try {
+      pic = await shrinkPicture(file);
+      $("cm-pic-prev").src = pic;
+      $("cm-pic-box").hidden = false;
+      say("");
+    } catch (err) {
+      clearPic();
+      say(err.message === "too-big"
+        ? "That picture is too big to attach. Try a smaller one."
+        : "That file couldn't be read as a picture. Try a JPG or PNG.");
+    }
   });
 
   $("cm-text").addEventListener("input", e => { $("cm-left").textContent = MAX - e.target.value.length; });
@@ -145,12 +272,15 @@ export function mountComments(box, post, site) {
         text,
         name: (user.displayName || "Reader").slice(0, 80),
         uid: user.uid,
+        ...(pic ? { image: pic } : {}),
         createdAt: serverTimestamp()
       });
+      clearPic();
       $("cm-text").value = "";
       $("cm-left").textContent = MAX;
     } catch (err) {
       say("Couldn't post your comment. Please try again.");
+      debug("Comment NOT saved (" + err.code + ") " + err.message);
     }
     setTimeout(() => { btn.disabled = false; }, 5000);   // short pause between comments
   });
