@@ -104,11 +104,11 @@ const SECTIONS = [
   { id: "home", label: "Home" },
   { id: "articles", label: "Articles" },
   { id: "art", label: "Art" },
-  { id: "diary", label: "Diary" },
+  { id: "daily-life", label: "Daily Life" },
   { id: "updates", label: "Updates" }
 ];
 const catOf = p => p.category || "articles";
-const KIND = { articles: "article", art: "art post", "diary": "diary post" };
+const KIND = { articles: "article", art: "art post", "daily-life": "daily life post" };
 const sectionHref = id => `index.html#${id}`;
 
 // Left sidebar
@@ -217,7 +217,7 @@ function homePage() {
   );
 }
 
-// Articles, Art and Diary: the posts of that category, in the same order as in posts.js
+// Articles, Art and Daily Life: the posts of that category, in the same order as in posts.js
 function listPage(id) {
   const items = POSTS.filter(p => catOf(p) === id);
   const label = SECTIONS.find(s => s.id === id).label;
