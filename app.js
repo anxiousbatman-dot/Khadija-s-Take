@@ -1,27 +1,23 @@
 const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-const sorted = [...POSTS].sort((a, b) => b.date.localeCompare(a.date));
+// Posts show in the same order as in posts.js (first one on top).
+const sorted = [...POSTS];
 const postUrl = p => `post.html?slug=${encodeURIComponent(p.slug)}`;
-// "Your take" area: a heart like button with a shared count, plus comments (Google sign-in, stored in Firebase) once set up in posts.js.
-// Counts are kept by Abacus, a free counting service that needs no account. It can only count up,
-// so a like adds to one counter and an unlike adds to another. The number shown is likes minus unlikes.
+// "Your take" area: a heart like button and the comments.
+// Once Firebase is set up in posts.js, likes and comments both live in Firebase (see comments.js).
+// Until then, likes use Abacus (a free counting service) and the comment area shows a notice.
 const COUNT_API = "https://abacus.jasoncameron.dev";
 const COUNT_NS = "khadijas-take-blog";
 const slugKey = slug => slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const countCall = (action, key) =>
-  fetch(`${COUNT_API}/${action}/${COUNT_NS}/${key}`, { cache: "no-store" })
+  fetch(`${COUNT_API}/${action}/${COUNT_NS}/${key}`)
     .then(r => r.json())
     .then(d => Number(d && d.value) || 0)
-    .catch(() => null);   // null means the counting service could not be reached
+    .catch(err => { console.warn("Like counter unreachable:", err); return null; });
 
 function addComments(p) {
   const section = main.querySelector("section");
-  const keyUp = "like-" + slugKey(p.slug);
-  const keyDown = "unlike-" + slugKey(p.slug);
-  const saved = "liked:" + p.slug;
-  let liked = false;
-  try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
-  let likes = 0, unlikes = 0;
+  const useFirebase = !!(SITE.firebase && SITE.firebase.apiKey);
 
   document.head.insertAdjacentHTML("beforeend", `<style>
     .take-bar { margin-top: 1.5rem; }
@@ -42,6 +38,27 @@ function addComments(p) {
 
   const btn = document.getElementById("like-btn");
   const num = document.getElementById("like-count");
+  const box = document.getElementById("comments-box");
+
+  if (useFirebase) {
+    import("./comments.js")
+      .then(m => m.mountFirebase({ btn, num, box, post: p, site: SITE }))
+      .catch(err => {
+        console.warn("Firebase part failed to load:", err);
+        box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`;
+      });
+    return;
+  }
+
+  // Not set up yet: likes use Abacus, and the comment area shows a notice.
+  box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
+  const saved = "liked:" + p.slug;
+  const keyUp = "like-" + slugKey(p.slug);
+  const keyDown = "unlike-" + slugKey(p.slug);
+  let liked = false;
+  try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
+  let likes = 0, unlikes = 0;
+
   const paint = () => {
     btn.classList.toggle("liked", liked);
     btn.setAttribute("aria-pressed", String(liked));
@@ -67,15 +84,6 @@ function addComments(p) {
       paint();
     });
   });
-
-  const box = document.getElementById("comments-box");
-  if (!SITE.firebase || !SITE.firebase.apiKey) {
-    box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
-    return;
-  }
-  import("./comments.js")
-    .then(m => m.mountComments(box, p, SITE))
-    .catch(() => { box.innerHTML = `<p class="pad">Comments couldn't load right now.</p>`; });
 }
 
 // If a post body is plain text (no HTML tags), make each line its own paragraph.

@@ -19,7 +19,8 @@ const SITE = {
   ]
 };
 
-// To add a post, copy one block, give it a unique slug, and paste it at the top.
+// To add a post, copy one block and give it a unique slug.
+// Posts show on the site in the same order as here: the first one in the list is on top.
 // "image" is optional: a small picture shown next to the summary (leave it out or "" for none).
 // "body": write plain text (each line becomes a paragraph) or HTML (<p>, <h2>, <ul>, <img>, <a>).
 const POSTS = [
@@ -115,6 +116,38 @@ const POSTS = [
 <p dir="auto">This isn't only about what happened to Yakin; this is about what the sentencing will mean to every woman who lives in Tunisia. Yakin deserves justice no matter what her background is, no matter who her parents are, and no matter what she consumes or wears or says; she is a child that needs protection, and rape is only the rapist's fault.</p>
 
 <p dir="auto">And lastly, women, you could be a yakin someday and act however you want others to act when you’re the victim. You’re not immune to rape; veiled or unveiled, men or women, none unfortunately is.</p>
+`
+  },
+  {
+    slug: "racism-repackaged-as-patriotism",
+    title: "Racism Re-packaged as Patriotism",
+    date: "2026-10-10",
+    image: "",
+    summary: "My opinion on racism in Tunisia and how it hides behind the excuse of protecting the country.",
+    body: `
+<p dir="auto">Tunisia, just like many other countries, is unfortunately full of racists using the same excuses being parroted to cover their racist actions by hiding behind “protecting our country.” Though these racists didn't stop at being racist, having judgment, and using nasty language, they went further than that.</p>
+
+<p dir="auto">They turned to protesting immigrant children’s rights for education, a basic human right. They went out on the street ignoring the very real and damaging tragedies and issues the country is facing and protesting children going to school, then even gave signs to their children, making kids who understand nothing of the matter participate in these racist protests in schools, and that does that tell you about what kind of children they’re raising. It also raises the question of if what bothers them about Black undocumented immigrants is the crimes they commit, wouldn't getting them an education reduce the crimes amongst them and could be beneficial for everyone?</p>
+
+<p dir="auto">Regardless of laws and citizenship status These children have the right to get educated; they have the right to a fair chance in life, and who are we to deny them that? They have birthright citizenship, and under Article 1 of the Education Law n° 2002-80 (enacted on July 23, 2002), education is explicitly designated as a "supreme national priority." It states that school attendance is strictly compulsory for all children from age 6 to age 16, and parents or legal guardians who fail to register their school-aged children or withdraw them prematurely can face financial fines.</p>
+
+<p dir="auto">So if the law permits it, why don't you? What threat does a child pose to your country just because their parents are undocumented immigrants?</p>
+
+<p dir="auto">These same people are also in comment sections and social media cursing these undocumented immigrants and documented ones alike and their families, urging for their deportation. Some even attacked random Black people on the streets, even other Tunisians with darker skin tones.</p>
+
+<p dir="auto">These people don’t see the irony of their actions, because some of them were or even are still undocumented immigrants in European countries themselves. The same people who complain about racism [abroad] are inflicting it on other immigrants to continue the vicious cycle, the unbreakable cycle of looking down on each other, thinking “we’re different,” “we’re better,” or ”we’re more civilized.” When in reality, Europeans see them the exact same way they see these Black “undocumented” immigrants. And when you use this argument, they refuse to acknowledge they’re even remotely comparable.</p>
+
+<p dir="auto">These people are not actually protecting their country; their hate doesn't come from patriotism, they’re just being racist and refusing to admit it.</p>
+
+<p dir="auto">We could ask ourselves, why does it not bother them when the immigrant is white? Why are white relationships outside of marriage accepted and normalized when renting a place together in an apartment or hotel, but if it’s a Black couple, it’s outrageous and unacceptable in a “Muslim country," which Tunisia is not even a Muslim country; it’s a civil state.</p>
+
+<p dir="auto">And we could also ask: in April 2026, why did they immediately jump to believing The homeowner of the apartment in the Aouina’s recorded video, capturing her confronting a sub-Saharan African immigrant sleeping in her bed, who replied to "What are you doing in my house? Who are you?"  by "I'm sorry... I was tired and just wanted to sleep," but immediately denied the allegedly filmed rape of a Black woman by her rapists, who are Tunisian. Why were there not nearly as many articles or posts about the second case, and why did we let a grown man, a representative of the people in the Assembly of the Representatives of the People, get away with saying, “A Black woman getting raped? That doesn't happen. There are plenty of beautiful Tunisian girls, Mshallah. Honestly, it breaks my heart to even have to say that; we’re not lacking. Tunisia has everything." Why do we have this bias? Is it because they’re undocumented or just because they’re Black?</p>
+
+<p dir="auto">Racism and colorism go hand in hand. In my opinion, these beliefs do not come from nothing; they stem from colonialism that built global social hierarchies that linked lighter skin to power, status, and morality, while treating darker skin as inferior, the working class, and the poor. This shows up in different fonts in different countries depending on the culture, not just in Tunisia. Colorism is one of the subtle ways racism is being practiced alongside using slurs and referring to Black people by these heavy-weight words that caused harm to these groups for a long time, refusing to acknowledge the concept of a slur and its impact. This type of extreme racism is mostly among the older generation.</p>
+
+<p dir="auto">Though the younger generation today isn't exempt from it themselves. Even those who are being vocal about the racism are participating in it. An example that is incredibly normalized today is saying the n-word in songs or just in conversations or even using a "Blackcent," all done “not to cause any harm." thinking being an “ally” gives them a pass for that behavior, or being North African makes them African enough to say that even though they’re not dark-skinned nor african-american nor have they faced the discrimination Black people face today.</p>
+
+<p dir="auto">Lastly, racism can show in different ways, and the first step to combat it is looking for it within yourself first. Confront your biases and judgments before confronting others, and most importantly, by not being a bystander. If you see someone being racist, take action: stop them, talk to them, or at least pull the victim away to give them a window to get out of an awkward situation. To be an ally means you have to take action and speak up.</p>
 `
   }
 ];
