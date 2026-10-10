@@ -5,7 +5,7 @@ const SITE = {
   tagline: "",   // the text under the banner (left empty on purpose)
   // Introduction card on the Home page (your picture, your names and your text).
   aboutName: "Khadija",
-  aboutNickname: "",   // leave "" to hide the "You can call me" line
+  aboutNickname: "Batman",   // leave "" to hide the "You can call me" line
   aboutPicture: "images/my-picture.jpg",   // your picture; until it exists, a "my picture" box shows
   // Your introduction. Each new line becomes its own paragraph.
   about: `a 21 year old student-artist at ISG-T, passionate about everything artistic, creative and social.
@@ -20,7 +20,7 @@ if you're intrested in art or social issues make sure to follow my blog to hear 
   },
   // Playlists box in the left column. "image" is the small picture next to each name.
   playlists: [
-    { name: "Mamma Mia!!", url: "https://open.spotify.com/playlist/5ZWmh4iPsbSvqH5FCH0NFu?si=oiLkXlH8SRCXenvAzscWzw", image: "images/mamma-mia.jpg" },
+    
     { name: "Bachatita", url: "https://open.spotify.com/playlist/2W0wd86QF26BRwEwhRvABw?si=WCRKdV6xQnOJ9A14zTH-Lw", image: "images/bachatita.jpg" },
     { name: "U Broke Me", url: "https://open.spotify.com/playlist/51vUopN4RlUP8GcgTXXI88?si=stON20mGS3uAd8jlnUG1MQ", image: "images/u-broke-me.jpg" },
     { name: "Angry Women", url: "https://open.spotify.com/playlist/6F8Ivq4pqo7LdGVRnNSO2x?si=teVgjIkpTvqod6-XRGMNqg", image: "images/angry-women.jpg" }
