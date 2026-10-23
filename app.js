@@ -310,8 +310,8 @@ function showSection() {
   const h = location.hash.replace("#", "");
   const id = SECTIONS.some(s => s.id === h) ? h : "about";
   const current = SECTIONS.find(s => s.id === id);
-  document.title = `${current.label} — ${SITE.name}`;
-  main.innerHTML = listPage(id);
+  document.title = id === "about" ? SITE.name : `${current.label} — ${SITE.name}`;
+  main.innerHTML = id === "about" ? homePage() : listPage(id);
   setActive(id);
   if (id === "art") setupArtPage();
 }
