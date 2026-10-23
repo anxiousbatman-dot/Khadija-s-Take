@@ -7,7 +7,6 @@ const sectionHref = id => `index.html#${id}`;
 const main = document.getElementById("main");
 
 const SECTIONS = [
-  { id: "home", label: "Home", file: "welcome" },
   { id: "about", label: "About me", file: "about-me" },
   { id: "articles", label: "Articles", file: "articles" },
   { id: "art", label: "Art & commissions", file: "commissions" },
