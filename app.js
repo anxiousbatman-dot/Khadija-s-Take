@@ -308,10 +308,10 @@ function listPage(id) {
 
 function showSection() {
   const h = location.hash.replace("#", "");
-  const id = SECTIONS.some(s => s.id === h) ? h : "home";
+  const id = SECTIONS.some(s => s.id === h) ? h : "about";
   const current = SECTIONS.find(s => s.id === id);
-  document.title = id === "home" ? SITE.name : `${current.label} — ${SITE.name}`;
-  main.innerHTML = id === "home" ? homePage() : listPage(id);
+  document.title = `${current.label} — ${SITE.name}`;
+  main.innerHTML = listPage(id);
   setActive(id);
   if (id === "art") setupArtPage();
 }
