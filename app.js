@@ -16,14 +16,16 @@ const SECTIONS = [
 const KIND = { articles: "article", art: "art post", diary: "diary post" };
 
 const ARTWORKS = [
-  { file: "angel-full-body.jpg", title: "Full body", type: "Full-body illustration", price: "30 DT" },
-  { file: "full-body-group.jpg", title: "Full body", type: "Full-body illustration", price: "25 DT", wide: true },
-  { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT", wide: true },
-  { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT" },
-  { file: "duo-rendered-half-body.jpg", title: "Rendered half-up", type: "Half-up illustration", price: "25 DT" },
-  { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT" },
-  { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT" },
-  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT" }
+  // ratio = original width / original height, so no picture is ever cropped.
+  // All pictures share the same height (set in style.css); width follows the ratio.
+  { file: "angel-full-body.jpg", title: "Full body", type: "Full-body illustration", price: "30 DT", ratio: 1809 / 2560 },
+  { file: "full-body-group.jpg", title: "Full body", type: "Full-body illustration", price: "25 DT", ratio: 2560 / 1920 },
+  { file: "duo-rendered-half-body.jpg", title: "Rendered half-up", type: "Half-up illustration", price: "25 DT", ratio: 4 / 5 },
+  { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT", ratio: 800 / 543 },
+  { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT", ratio: 4 / 5 },
+  { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT", ratio: 4 / 5 },
+  { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 600 / 800 },
+  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 4 / 5 }
 ];
 
 const COUNT_API = "https://abacus.jasoncameron.dev";
@@ -211,7 +213,7 @@ function artPage() {
     <section class="portfolio-section" aria-labelledby="portfolio-title">
       <div class="section-heading slider-heading"><div><p class="eyebrow">Portfolio / 2026</p><h2 id="portfolio-title">Previous work</h2></div><div class="slider-controls"><button type="button" id="slide-prev" aria-label="Previous artwork">←</button><button type="button" id="slide-next" aria-label="Next artwork">→</button></div></div>
       <div class="art-slider" id="art-slider" tabindex="0" aria-label="Artwork gallery. Scroll horizontally or use the previous and next buttons.">
-        ${ARTWORKS.map((a, i) => `<figure class="art-card${a.wide ? " wide" : ""}"><div class="art-image"><div class="art-placeholder"><span>Artwork ${String(i + 1).padStart(2, "0")}</span><small>${a.file}</small></div><img src="images/${a.file}" alt="${a.title}" loading="lazy" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"></div><figcaption><span>${a.title}</span><strong>${a.price}</strong></figcaption></figure>`).join("")}
+        ${ARTWORKS.map((a, i) => `<figure class="art-card" style="--r:${a.ratio}"><div class="art-image"><div class="art-placeholder"><span>Artwork ${String(i + 1).padStart(2, "0")}</span><small>${a.file}</small></div><img src="images/${a.file}" alt="${a.title}" loading="lazy" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"></div><figcaption><span>${a.title}</span><strong>${a.price}</strong></figcaption></figure>`).join("")}
       </div>
     </section>
     <section class="commission-sheet" aria-labelledby="prices-title">
