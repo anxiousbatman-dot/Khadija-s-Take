@@ -16,14 +16,14 @@ const SECTIONS = [
 const KIND = { articles: "article", art: "art post", diary: "diary post" };
 
 const ARTWORKS = [
-  { file: "full-body-group.jpg", title: "Four characters · full body", type: "Full-body illustration", price: "25 DT" },
+  { file: "full-body-group.jpg", title: "Full body", type: "Full-body illustration", price: "25 DT" },
   { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT" },
   { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT" },
-  { file: "angel-full-body.jpg", title: "Angel · full body", type: "Full-body illustration", price: "30 DT" },
-  { file: "duo-rendered-half-body.jpg", title: "Two characters · rendered half-up", type: "Half-up illustration", price: "25 DT" },
+  { file: "angel-full-body.jpg", title: "Full body", type: "Full-body illustration", price: "30 DT" },
+  { file: "duo-rendered-half-body.jpg", title: "Rendered half-up", type: "Half-up illustration", price: "25 DT" },
   { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT" },
-  { file: "sketch-01.jpg", title: "Character sketch 01", type: "Sketch", price: "10 DT" },
-  { file: "sketch-02.jpg", title: "Character sketch 02", type: "Sketch", price: "10 DT" }
+  { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT" },
+  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT" }
 ];
 
 const COUNT_API = "https://abacus.jasoncameron.dev";
@@ -142,28 +142,6 @@ const articleCard = (p, featured = false) => `
     </div>
   </article>`;
 
-function homePage() {
-  const latest = byDate[0];
-  return `
-    <section class="home-hero">
-      <div class="hero-copy">
-        <p class="eyebrow">A personal journal & creative portfolio</p>
-        <h1>Ideas in words.<br><em>Stories in colour.</em></h1>
-        <p>I’m Khadija, a Tunisian student, writer, and digital illustrator. This is where I share considered takes on social issues and selected creative work.</p>
-        <a class="button primary" href="#articles">Explore my writing <span aria-hidden="true">→</span></a>
-      </div>
-      <div class="hero-index" aria-label="Website contents">
-        <span class="index-label">Inside this folder</span>
-        <a href="#about"><b>01</b><span>About & experience</span></a>
-        <a href="#articles"><b>02</b><span>Articles & opinions</span></a>
-        <a href="#art"><b>03</b><span>Art & commissions</span></a>
-      </div>
-    </section>
-    <section class="latest-section">
-      <div class="section-heading"><p class="eyebrow">Fresh from the journal</p><h2>Latest article</h2></div>
-      ${latest ? articleCard(latest, true) : `<p>No posts yet.</p>`}
-    </section>`;
-}
 
 function aboutPage() {
   return `
