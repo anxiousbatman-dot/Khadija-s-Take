@@ -312,7 +312,9 @@ function showSection() {
   const current = SECTIONS.find(s => s.id === id);
   if (!current) return;
   document.title = id === "about" ? SITE.name : `${current.label} — ${SITE.name}`;
-  main.innerHTML = id === "about" ? homePage() : listPage(id);
+  
+  main.innerHTML = id === "about" ? aboutPage() : listPage(id);
+  
   setActive(id);
   if (id === "art") setupArtPage();
 }
