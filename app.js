@@ -23,9 +23,9 @@ const ARTWORKS = [
   { file: "duo-rendered-half-body.jpg", title: "Rendered half-up", type: "Half-up illustration", price: "25 DT", ratio: 4 / 5 },
   { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT", ratio: 800 / 543 },
   { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT", ratio: 4 / 5 },
-  { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT", ratio: 4 / 5 },
+  { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT", ratio: 1156 / 1728 },
   { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 600 / 800 },
-  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 4 / 5 }
+  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 600 / 800 }
 ];
 
 const COUNT_API = "https://abacus.jasoncameron.dev";
