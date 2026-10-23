@@ -225,7 +225,7 @@ function artPage() {
           <div><span>Two characters · rendered half-up</span><b>25 DT</b></div>
           <div><span>Four characters · full body</span><b>25 DT</b></div>
           <div><span>Angel · full body</span><b>30 DT</b></div>
-          <div><span>Character sketch</span><b>10 DT <small>each</small></b></div>
+          <div><span>Character sketch</span><b>10 DT</b></div>
         </div>
         <div class="price-group"><h3>Design & usage</h3>
           <div><span>Illustrated poster</span><b>16 DT</b></div>
