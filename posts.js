@@ -1,43 +1,26 @@
-// Edit your site details here. They update on every page.
-// Images: put your files in the "images" folder (see images/README.txt).
+// Edit your site details here. Article content and the comment system are unchanged.
 const SITE = {
-  name: "Khadija's Take",
-  tagline: "",   // the text under the banner (left empty on purpose)
-  // Introduction card on the Home page (your picture, your names and your text).
-  aboutName: "Khadija",
-  aboutNickname: "Batman",   // leave "" to hide the "You can call me" line
-  aboutPicture: "images/my-picture.jpg",   // your picture; until it exists, a "my picture" box shows
-  // Your introduction. Each new line becomes its own paragraph.
-  about: `a 21 year old student-artist at ISG-T, passionate about everything artistic, creative and social.
-i focus on giving my personal takes and views about political and social matters espacially in tunisia. i love sharing my takes and learning more about diffrent opinions.
-if you're intrested in art or social issues make sure to follow my blog to hear my takes and share yours.`,
-  adminEmail: "kadija0boughanmi@gmail.com",   // the Google account that can delete any comment
-  firebase: {   // paste your Firebase values here to turn on comments
+  name: "Khadija’s Take",
+  tagline: "Writing, illustration, and independent work",
+  aboutName: "Khadija Boughanmi",
+  aboutPicture: "images/khadija-portrait.jpg",
+  about: `Management Sciences student at ISG Tunis, digital illustrator, and independent writer. I publish commentary on social and political issues, coordinate community events, and work with clients on commissioned illustrations.`,
+  adminEmail: "kadija0boughanmi@gmail.com",
+  commissionEmail: "kadija0boughanmi@gmail.com",
+  firebase: {
     apiKey: "",
     authDomain: "",
     projectId: "",
     appId: ""
   },
-  // Playlists box in the left column. "image" is the small picture next to each name.
-  playlists: [
-    
-    { name: "Falling in love", url: "https://open.spotify.com/playlist/5qVcLzy5f5wNkmX1rFX9B5?si=6RAg10abQTOGCi8n7_AS_w", image: "images/bachatita.jpg" },
-    { name: "U Broke Me", url: "https://open.spotify.com/playlist/51vUopN4RlUP8GcgTXXI88?si=stON20mGS3uAd8jlnUG1MQ", image: "images/u-broke-me.jpg" },
-    { name: "Angry Women", url: "https://open.spotify.com/playlist/6F8Ivq4pqo7LdGVRnNSO2x?si=teVgjIkpTvqod6-XRGMNqg", image: "images/angry-women.jpg" }
-  ],
   links: [
     { text: "Email", url: "mailto:kadija0boughanmi@gmail.com" },
-    { text: "Youtube", url: "https://www.youtube.com/@Anxious_batman" },
-    { text: "Tiktok", url: "https://www.tiktok.com/@kkhhaaddiijjaa3?_r=1&_t=ZS-9AHR7cq6YGS" },
+    { text: "YouTube", url: "https://www.youtube.com/@Anxious_batman" },
+    { text: "TikTok", url: "https://www.tiktok.com/@kkhhaaddiijjaa3?_r=1&_t=ZS-9AHR7cq6YGS" },
     { text: "LinkedIn", url: "https://www.linkedin.com/in/khadija-boughanmi-a11036332/" }
   ]
 };
 
-// To add a post, copy one block and give it a unique slug.
-// "category" decides which section it appears in: articles, art or daily-life.
-// Posts show on the site in the same order as here: the first one in the list is on top.
-// "image" is optional: a small picture shown next to the summary (leave it out or "" for none).
-// "body": write plain text (each line becomes a paragraph) or HTML (<p>, <h2>, <ul>, <img>, <a>).
 const POSTS = [
   {
     slug: "Yakin-case",

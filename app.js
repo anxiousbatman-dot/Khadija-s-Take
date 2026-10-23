@@ -1,11 +1,32 @@
 const fmt = d =>
   new Date(d + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-// Newest first, by date. Used for "Latest post", "Recent posts" and Updates.
 const byDate = [...POSTS].sort((x, y) => y.date.localeCompare(x.date));
 const postUrl = p => `post.html?slug=${encodeURIComponent(p.slug)}`;
-// "Your take" area: a heart like button and the comments.
-// Once Firebase is set up in posts.js, likes and comments both live in Firebase (see comments.js).
-// Until then, likes use Abacus (a free counting service) and the comment area shows a notice.
+const catOf = p => p.category || "articles";
+const sectionHref = id => `index.html#${id}`;
+const main = document.getElementById("main");
+
+const SECTIONS = [
+  { id: "home", label: "Home", file: "welcome" },
+  { id: "about", label: "About me", file: "about-me" },
+  { id: "articles", label: "Articles", file: "articles" },
+  { id: "art", label: "Art & commissions", file: "commissions" },
+  { id: "diary", label: "Diary", file: "diary" },
+  { id: "updates", label: "Updates", file: "updates" }
+];
+const KIND = { articles: "article", art: "art post", diary: "diary post" };
+
+const ARTWORKS = [
+  { file: "full-body-group.jpg", title: "Four characters · full body", type: "Full-body illustration", price: "25 DT" },
+  { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT" },
+  { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT" },
+  { file: "angel-full-body.jpg", title: "Angel · full body", type: "Full-body illustration", price: "30 DT" },
+  { file: "duo-rendered-half-body.jpg", title: "Two characters · rendered half-up", type: "Half-up illustration", price: "25 DT" },
+  { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT" },
+  { file: "sketch-01.jpg", title: "Character sketch 01", type: "Sketch", price: "10 DT" },
+  { file: "sketch-02.jpg", title: "Character sketch 02", type: "Sketch", price: "10 DT" }
+];
+
 const COUNT_API = "https://abacus.jasoncameron.dev";
 const COUNT_NS = "khadijas-take-blog";
 const slugKey = slug => slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -15,36 +36,22 @@ const countCall = (action, key) =>
     .then(d => Number(d && d.value) || 0)
     .catch(err => { console.warn("Like counter unreachable:", err); return null; });
 
-// The Firebase values live in config.js. Vercel makes that file when the site is deployed, from the
-// Environment Variables you typed into Vercel, so the values never sit in GitHub.
-// To test in VS Code, create config.js by hand (see config.example.js). If there is no config.js,
-// the values in posts.js are used instead.
 let fbSource = "nowhere";
 async function loadFirebaseConfig() {
   try {
     const m = await import("./config.js");
     if (m.default && m.default.apiKey) { fbSource = "config.js"; return m.default; }
-  } catch (e) { /* no config.js here: fall through */ }
+  } catch (e) { /* config.js is generated at deployment when available */ }
   if (SITE.firebase && SITE.firebase.apiKey) { fbSource = "posts.js"; return SITE.firebase; }
   return null;
 }
 
 function addComments(p) {
   const section = main.querySelector("section");
-
-  document.head.insertAdjacentHTML("beforeend", `<style>
-    .take-bar { margin-top: 1.5rem; }
-    .like { display: inline-flex; align-items: center; gap: .5rem; margin: 0 .5rem .8rem; padding: .25rem .8rem .25rem .5rem; background: none; border: 1px solid var(--line); border-radius: 999px; font: inherit; color: var(--ink); cursor: pointer; }
-    .like svg path { fill: none; stroke: var(--head); stroke-width: 2; transition: fill .15s, stroke .15s; }
-    .like.liked svg path { fill: #e0245e; stroke: #e0245e; }
-    .like:focus-visible { outline: 2px dashed var(--link); outline-offset: 2px; }
-    #comments-box { margin: 0 .5rem; }
-  </style>`);
-
   section.insertAdjacentHTML("beforeend", `
-    <h2 class="bar take-bar">Your take</h2>
+    <h2 class="take-title">Your take</h2>
     <button class="like" id="like-btn" type="button" aria-pressed="false" aria-label="Like this post">
-      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
       <span id="like-count">0</span>
     </button>
     <div id="comments-box"></div>`);
@@ -52,31 +59,25 @@ function addComments(p) {
   const btn = document.getElementById("like-btn");
   const num = document.getElementById("like-count");
   const box = document.getElementById("comments-box");
-
-  // Add  &debug=1  to a post's address to see a small checklist of what is working and what is not.
   let dbg = () => {};
   if (new URLSearchParams(location.search).has("debug")) {
-    section.insertAdjacentHTML("beforeend", `<pre id="dbg" style="margin:.8rem .5rem;padding:.6rem;white-space:pre-wrap;background:#fff;color:#222;border:2px dashed #888;font-size:.8rem">Checks (you only see this because the address has debug in it):</pre>`);
+    section.insertAdjacentHTML("beforeend", `<pre id="dbg" class="debug-box">Checks (visible only in debug mode):</pre>`);
     dbg = line => { document.getElementById("dbg").textContent += "\n" + line; };
     dbg("Page address: " + location.host);
   }
 
   loadFirebaseConfig().then(cfg => {
-    dbg(cfg
-      ? `Firebase keys found in ${fbSource} (project: ${cfg.projectId})`
-      : "NO Firebase keys found, neither in config.js nor in posts.js");
+    dbg(cfg ? `Firebase keys found in ${fbSource} (project: ${cfg.projectId})` : "NO Firebase keys found");
     if (!cfg) return startWithoutFirebase();
     import("./comments.js")
       .then(m => m.mountFirebase({ btn, num, box, post: p, site: { ...SITE, firebase: cfg }, debug: dbg }))
       .catch(err => {
         console.warn("Firebase part failed to load:", err);
-        box.innerHTML = `<p class="pad">♥</p>`;
+        box.innerHTML = `<p class="pad">Comments could not be loaded.</p>`;
       });
   });
 
   function startWithoutFirebase() {
-    dbg("So likes use the old counter (it does not save properly) and comments are switched off.");
-    // Not set up yet: likes use Abacus, and the comment area shows a notice.
     box.innerHTML = `<p class="pad">Comments are coming soon.</p>`;
     const saved = "liked:" + p.slug;
     const keyUp = "like-" + slugKey(p.slug);
@@ -84,223 +85,283 @@ function addComments(p) {
     let liked = false;
     try { liked = localStorage.getItem(saved) === "1"; } catch (e) {}
     let likes = 0, unlikes = 0;
-
     const paint = () => {
       btn.classList.toggle("liked", liked);
       btn.setAttribute("aria-pressed", String(liked));
       num.textContent = Math.max(0, likes - unlikes);
     };
     paint();
-
     Promise.all([countCall("get", keyUp), countCall("get", keyDown)]).then(([a, b]) => {
-      likes = a || 0;
-      unlikes = b || 0;
-      paint();
+      likes = a || 0; unlikes = b || 0; paint();
     });
-
     btn.addEventListener("click", () => {
       liked = !liked;
-      const isLike = liked;
-      if (isLike) likes++; else unlikes++;
+      if (liked) likes++; else unlikes++;
       paint();
       try { localStorage.setItem(saved, liked ? "1" : "0"); } catch (e) {}
-      countCall("hit", isLike ? keyUp : keyDown).then(v => {
-        if (v === null) return;   // service unreachable: keep what is on screen
-        if (isLike) likes = v; else unlikes = v;
+      countCall("hit", liked ? keyUp : keyDown).then(v => {
+        if (v === null) return;
+        if (liked) likes = v; else unlikes = v;
         paint();
       });
     });
   }
 }
 
-// If a post body is plain text (no HTML tags), make each line its own paragraph.
-// dir="auto" lets Arabic lines flow right-to-left on their own.
 const formatBody = html =>
   /<\w+[^>]*>/.test(html)
     ? html
     : html.split("\n").map(t => t.trim()).filter(Boolean).map(t => `<p dir="auto">${t}</p>`).join("");
-// Hide a picture quietly if the file is not there yet
-const img = (src, alt = "") => (src ? `<img src="${src}" alt="${alt}" onerror="this.remove()">` : "");
 
-document.querySelectorAll("[data-site-name]").forEach(el => (el.textContent = SITE.name));
-document.querySelectorAll("[data-site-tagline]").forEach(el => (el.textContent = SITE.tagline));
 document.getElementById("year").textContent = new Date().getFullYear();
+document.getElementById("navigation").innerHTML = SECTIONS.map(s =>
+  `<a href="${sectionHref(s.id)}" data-sec="${s.id}"><span aria-hidden="true">/</span>${s.label}</a>`
+).join("");
 
-// Sections of the site (shown in the Menu box). Each post belongs to one through its "category" in posts.js.
-const SECTIONS = [
-  { id: "home", label: "Home" },
-  { id: "articles", label: "Articles" },
-  { id: "art", label: "Art" },
-  { id: "diary", label: "Diary" },
-  { id: "updates", label: "Updates" }
-];
-const catOf = p => p.category || "articles";
-const KIND = { articles: "article", art: "art post", "diary": "diary post" };
-const sectionHref = id => `index.html#${id}`;
+const setActive = id => {
+  document.querySelectorAll("[data-sec]").forEach(a => {
+    if (a.dataset.sec === id) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  document.body.dataset.section = id;
+};
 
-// Left sidebar
-const side = (title, items, cls = "") =>
-  `<div class="side-box ${cls}"><h3>${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
-// Small pink tile with a music note. If the playlist picture exists it covers the tile.
-const noteIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>`;
-const playlistLink = pl =>
-  `<a class="pl" href="${pl.url}" target="_blank" rel="noopener"><span class="pl-img">${noteIcon}${
-    pl.image ? `<img src="${pl.image}" alt="" onerror="this.remove()">` : ""
-  }</span><span>${pl.name}</span></a>`;
-document.getElementById("sidebar").innerHTML =
-  side("Menu", SECTIONS.map(s => `<a href="${sectionHref(s.id)}" data-sec="${s.id}">${s.label}</a>`)) +
-  side("Playlists", (SITE.playlists || []).map(playlistLink), "playlists") +
-  side("Links", SITE.links.filter(l => l.url).map(l => `<a href="${l.url}">${l.text}</a>`));
+const pageHead = (eyebrow, title, intro = "") => `
+  <header class="page-heading">
+    <p class="eyebrow">${eyebrow}</p>
+    <h1>${title}</h1>
+    ${intro ? `<p class="page-intro">${intro}</p>` : ""}
+  </header>`;
 
-document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap">`);
-document.head.insertAdjacentHTML("beforeend", `<style>
-  .side-box a[aria-current] { font-weight: 700; text-decoration: underline; }
-  .side-box.playlists ul { padding-left: .6rem; list-style: none; }
-  .side-box.playlists li { margin: .4rem 0; }
-  .pl { display: flex; align-items: center; gap: .55rem; }
-  .pl-img { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; overflow: hidden; background: var(--head); border: 1px solid var(--line); border-radius: 4px; }
-  .pl-img svg { width: 1.1rem; height: 1.1rem; fill: #fff; }
-  .pl-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .notes { margin: 0 .5rem; padding: 0; list-style: none; }
-  .note { display: flex; gap: .7rem; align-items: flex-start; margin-bottom: .6rem; padding: .6rem .8rem; background: var(--entry); border: 1px solid var(--line); }
-  .note svg { flex: none; margin-top: .25rem; fill: var(--ink); }
-  .note p { margin: 0; }
-  .note-date { display: block; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
-  .about-card { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.4rem; align-items: start; padding: 0 .5rem; }
-  .about-pic { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 5; overflow: hidden; background: var(--strip); border: 3px solid var(--head); border-radius: 18px; }
-  .about-pic span { padding: 1rem; text-align: center; font: 700 1.3rem/1.2 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--head); }
-  .about-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .about-hi { margin: 0; font: 500 1.25rem/1.25 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--ink); }
-  .about-name { font-weight: 700; font-size: 2.1rem; }
-  .about-nick { display: block; margin: .15rem 0 1.1rem; font: 700 clamp(2.6rem, 7vw, 3.6rem)/.95 "Fredoka", Quicksand, Verdana, sans-serif; color: var(--head); }
-  .about-text p:not(.about-hi) { margin: 0 0 .7rem; }
-  @media (max-width: 720px) { .about-card { grid-template-columns: 1fr; } .about-pic { max-height: 24rem; } }
-</style>`);
+const articleCard = (p, featured = false) => `
+  <article class="article-row${featured ? " featured" : ""}">
+    <div class="article-meta"><time datetime="${p.date}">${fmt(p.date)}</time><span>Social commentary</span></div>
+    <div class="article-copy">
+      <h2><a href="${postUrl(p)}">${p.title}</a></h2>
+      <p>${p.summary}</p>
+      <a class="text-link" href="${postUrl(p)}" aria-label="Read ${p.title}">Read the article <span aria-hidden="true">↗</span></a>
+    </div>
+  </article>`;
 
-const main = document.getElementById("main");
-const setActive = id =>
-  document.querySelectorAll("[data-sec]").forEach(a =>
-    a.dataset.sec === id ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+function homePage() {
+  const latest = byDate[0];
+  return `
+    <section class="home-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">A personal journal & creative portfolio</p>
+        <h1>Ideas in words.<br><em>Stories in colour.</em></h1>
+        <p>I’m Khadija, a Tunisian student, writer, and digital illustrator. This is where I share considered takes on social issues and selected creative work.</p>
+        <a class="button primary" href="#articles">Explore my writing <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-index" aria-label="Website contents">
+        <span class="index-label">Inside this folder</span>
+        <a href="#about"><b>01</b><span>About & experience</span></a>
+        <a href="#articles"><b>02</b><span>Articles & opinions</span></a>
+        <a href="#art"><b>03</b><span>Art & commissions</span></a>
+      </div>
+    </section>
+    <section class="latest-section">
+      <div class="section-heading"><p class="eyebrow">Fresh from the journal</p><h2>Latest article</h2></div>
+      ${latest ? articleCard(latest, true) : `<p>No posts yet.</p>`}
+    </section>`;
+}
 
-// Pieces used by the section pages
+function aboutPage() {
+  return `
+    ${pageHead("Profile / curriculum vitae", "Hello, I’m Khadija.", "Management Sciences student, event coordinator, freelance illustrator, and independent writer based in Tunis.")}
+    <section class="about-layout">
+      <div class="about-main">
+        <div class="profile-block">
+          <div class="portrait-frame">
+            <div class="portrait-placeholder"><span>Khadija Boughanmi</span><small>Tunis, Tunisia</small></div>
+            <img src="${SITE.aboutPicture}" alt="Portrait of Khadija Boughanmi" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()">
+          </div>
+          <div class="profile-summary"><h2>A multidisciplinary profile</h2><p>${SITE.about}</p><p>I’m currently seeking a summer internship in accounting or business administration, and I’m available on weekends during the semester and full-time over the summer.</p></div>
+        </div>
+        <div class="cv-section"><h2>Experience</h2>
+          <article class="cv-item"><div><time>Oct 2023 — Present</time><span>Kitsune Club · Tunis</span></div><div><h3>Vice President, Events Department</h3><p>Plan and coordinate events for a cosplay community. Following the department’s restructuring, joined the Logistics team for event setup and organization.</p></div></article>
+          <article class="cv-item"><div><time>Mar 2026 — Present</time><span>Freelance · Online</span></div><div><h3>Digital Illustrator</h3><p>Create commissioned illustrations, define client needs, manage communication and schedules, and deliver artwork on deadline.</p></div></article>
+          <article class="cv-item"><div><time>Sep 2026 — Present</time><span>Independent · Online</span></div><div><h3>Founder & Writer</h3><p>Designed, built, and launched a personal website to publish articles on current affairs and social topics.</p></div></article>
+        </div>
+        <div class="cv-section"><h2>Education</h2>
+          <article class="cv-item"><div><time>Sep 2026 — Present</time><span>ISG · Tunis</span></div><div><h3>National Bachelor’s Degree in Management Sciences</h3><p>First-year student at the Higher Institute of Management.</p></div></article>
+          <article class="cv-item"><div><time>Graduated with honors</time><span>Lycée Aïcha Bellagha · Tunis</span></div><div><h3>Baccalaureate in Economics and Management</h3><p>Graduated with honors (Assez Bien).</p></div></article>
+        </div>
+      </div>
+      <aside class="about-aside">
+        <section><h2>Skills</h2><ul class="skill-list"><li>Microsoft Excel</li><li>Event coordination & logistics</li><li>Client communication</li><li>Time management</li><li>Content writing & web publishing</li><li>Multilingual communication</li></ul></section>
+        <section><h2>Languages</h2><dl class="language-list"><div><dt>Arabic</dt><dd>Native</dd></div><div><dt>English</dt><dd>Fluent</dd></div><div><dt>French</dt><dd>Proficient</dd></div></dl></section>
+        <section><h2>Interests</h2><p>Writing and content creation<br>Digital illustration<br>Community and cultural events</p></section>
+        <section class="contact-block"><h2>Contact</h2><a href="mailto:kadija0boughanmi@gmail.com">kadija0boughanmi@gmail.com</a><a href="https://www.linkedin.com/in/khadija-boughanmi-a11036332/" target="_blank" rel="noopener">LinkedIn profile ↗</a><span>Tunis, Tunisia</span></section>
+      </aside>
+    </section>`;
+}
+
+function articlesPage() {
+  const items = POSTS.filter(p => catOf(p) === "articles");
+  return `${pageHead("Notes on society & current affairs", "Articles", "Long-form personal commentary, questions, and perspectives. No noise—just the writing.")}
+    <section class="article-list">${items.length ? items.map(p => articleCard(p)).join("") : `<p>Nothing here yet. Check back soon.</p>`}</section>`;
+}
+
+function diaryPage() {
+  const items = POSTS.filter(p => catOf(p) === "diary");
+  return `${pageHead("Personal notebook", "Diary", "Small observations, everyday moments, and work in progress.")}
+    <section class="article-list">${items.length ? items.map(p => articleCard(p)).join("") : `<div class="empty-state"><h2>This page is still blank.</h2><p>New diary entries will appear here.</p></div>`}</section>`;
+}
+
+function updatesPage() {
+  return `${pageHead("A quiet notification feed", "Updates", "New posts and portfolio additions, newest first.")}
+    <section class="conversation" aria-label="Website updates">
+      <div class="chat-date">Recent activity</div>
+      ${byDate.length ? byDate.map(p => `
+        <article class="message">
+          <div class="message-avatar" aria-hidden="true">KT</div>
+          <div class="bubble"><span>${shortDate(p.date)}</span><p>A new ${KIND[catOf(p)] || "post"} is ready.</p><a href="${postUrl(p)}">${p.title} <span aria-hidden="true">↗</span></a></div>
+        </article>`).join("") : `<p>No updates yet.</p>`}
+    </section>`;
+}
+
 const shortDate = d => {
   const dt = new Date(d + "T00:00:00");
   const opts = { month: "long", day: "numeric" };
   if (dt.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
   return dt.toLocaleDateString("en-US", opts);
 };
-const section = (title, inner) => `<section><h2 class="bar">${title}</h2>${inner}</section>`;
-const card = p => `
-  <article class="entry">
-    <h3 class="entry-title"><a href="${postUrl(p)}">${p.title} - ${fmt(p.date)}</a></h3>
-    <div class="entry-body">
-      ${img(p.image, p.title)}
-      <div><p>${p.summary}</p><p><a href="${postUrl(p)}">Read more</a></p></div>
-    </div>
-  </article>`;
-const bell = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-2h-4.8A2.5 2.5 0 0 0 12 22zm6-6v-5a6 6 0 0 0-4.5-5.8v-.7a1.5 1.5 0 0 0-3 0v.7A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
 
-// Introduction card: picture on the left, "Hi, I'm ..." and your text on the right
-function aboutCard() {
-  const paras = (SITE.about || "").split("\n").map(t => t.trim()).filter(Boolean)
-    .map(t => `<p dir="auto">${t}</p>`).join("");
-  const nick = SITE.aboutNickname
-    ? `<p class="about-hi">You can call me <strong class="about-nick">${SITE.aboutNickname}</strong></p>` : "";
+function artPage() {
   return `
-    <div class="about-card">
-      <div class="about-pic"><span>my picture</span></div>
-      <div class="about-text">
-        <p class="about-hi">Hi, I'm <strong class="about-name">${SITE.aboutName}</strong></p>
-        ${nick}
-        ${paras}
+    ${pageHead("Selected work & commissions", "Art, made personal.", "Browse previous work, compare commission types, and send a detailed request when you’re ready.")}
+    <section class="portfolio-section" aria-labelledby="portfolio-title">
+      <div class="section-heading slider-heading"><div><p class="eyebrow">Portfolio / 2026</p><h2 id="portfolio-title">Previous work</h2></div><div class="slider-controls"><button type="button" id="slide-prev" aria-label="Previous artwork">←</button><button type="button" id="slide-next" aria-label="Next artwork">→</button></div></div>
+      <div class="art-slider" id="art-slider" tabindex="0" aria-label="Artwork gallery. Scroll horizontally or use the previous and next buttons.">
+        ${ARTWORKS.map((a, i) => `<figure class="art-card"><div class="art-image"><div class="art-placeholder"><span>Artwork ${String(i + 1).padStart(2, "0")}</span><small>${a.file}</small></div><img src="images/${a.file}" alt="${a.title}" loading="lazy" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"></div><figcaption><span>${a.title}</span><strong>${a.price}</strong></figcaption></figure>`).join("")}
       </div>
-    </div>`;
+      <p class="slider-hint">Scroll or use the arrows · hover or focus an artwork to enlarge it</p>
+    </section>
+    <section class="commission-sheet" aria-labelledby="prices-title">
+      <div class="sheet-title"><div><p>Commissions are open</p><h2 id="prices-title">Price list</h2></div><span>Personal use · Prices in Tunisian dinars</span></div>
+      <div class="price-columns">
+        <div class="price-group"><h3>Illustration</h3>
+          <div><span>Flat-colour bust-up</span><b>10 DT</b></div>
+          <div><span>Fully rendered half-up</span><b>20 DT</b></div>
+          <div><span>Two characters · rendered half-up</span><b>25 DT</b></div>
+          <div><span>Four characters · full body</span><b>25 DT</b></div>
+          <div><span>Angel · full body</span><b>30 DT</b></div>
+          <div><span>Character sketch</span><b>10 DT <small>each</small></b></div>
+        </div>
+        <div class="price-group"><h3>Design & usage</h3>
+          <div><span>Illustrated poster</span><b>16 DT</b></div>
+          <div><span>Personal use</span><b>Included</b></div>
+          <div><span>Commercial / business use</span><b>On request</b></div>
+          <p>Prices are starting points for the examples shown. Send references for a precise quote before payment.</p>
+        </div>
+      </div>
+      <div class="can-do"><div><h3>Can do</h3><p>Fan art · Portraits · Original characters</p></div><div><h3>Can’t do</h3><p>Detailed backgrounds · NSFW</p></div></div>
+    </section>
+    <section class="request-section" id="request" aria-labelledby="request-title">
+      <div class="request-intro"><p class="eyebrow">Start a project</p><h2 id="request-title">Commission request</h2><p>Tell me what you have in mind. Your request will be sent directly to my email, and I’ll reply with availability, a quote, and the next steps.</p><div class="process-note"><span>01</span><p>Send references and details</p><span>02</span><p>Approve the sketch</p><span>03</span><p>Receive your artwork</p></div></div>
+      <form class="commission-form" action="https://formsubmit.co/${SITE.commissionEmail}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="_subject" value="New art commission request — Khadija’s Take">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true">
+        <div class="form-grid">
+          <label>First name<input type="text" name="First name" autocomplete="given-name" required></label>
+          <label>Last name<input type="text" name="Last name" autocomplete="family-name" required></label>
+          <label>Email address<input type="email" name="Email" autocomplete="email" required></label>
+          <label>Contact number <span>(optional)</span><input type="tel" name="Contact number" autocomplete="tel"></label>
+          <label>Type of artwork<select name="Artwork type" id="artwork-type" required><option value="">Please select</option><option>Flat-colour bust-up — 10 DT</option><option>Fully rendered half-up — 20 DT</option><option>Two characters, rendered half-up — 25 DT</option><option>Four characters, full body — 25 DT</option><option>Angel, full body — 30 DT</option><option>Character sketch — 10 DT each</option><option>Illustrated poster — 16 DT</option><option>Other / custom request</option></select></label>
+          <label>Requested completion date<input type="date" name="Requested completion date" id="deadline" required><small>At least one week from today.</small></label>
+          <label class="full-field">Intended use<select name="Intended use" required><option value="">Please select</option><option>Personal use</option><option>Commercial / business use</option></select></label>
+          <label class="full-field">Tell me about your idea<textarea name="Project details" rows="6" required placeholder="Characters, pose, expression, colours, text, dimensions, or anything else that matters."></textarea></label>
+          <label class="full-field file-field">Reference pictures <span>(up to 5)</span><input type="file" name="Reference pictures" accept="image/*" multiple id="reference-files"><small>JPG, PNG, or other image files. Keep the combined size under 10 MB.</small></label>
+        </div>
+        <details class="terms"><summary>Read the Terms of Service before submitting</summary><div class="terms-grid">
+          <section><h3>Payment</h3><p>50% is paid upfront before the sketch and 50% before delivery of the finished artwork. Accepted payment methods are discussed by email.</p></section>
+          <section><h3>Process</h3><p>You send references and details. I provide a quote and sketch for approval, share progress updates, and send the finished work after the remaining payment.</p></section>
+          <section><h3>Revisions</h3><p>Three major revisions are allowed during the sketch phase. Additional revisions or changes after rendering begins may incur extra fees.</p></section>
+          <section><h3>Refunds</h3><p>A full refund is available only before work starts. No refund is available after sketch approval. If I cannot finish for personal reasons, a partial refund will be discussed.</p></section>
+          <section><h3>Usage rights</h3><p>Commissions are for personal use unless commercial rights are agreed and paid for. You may post the artwork with proper credit. Do not sell, trace, claim, or use it for AI training.</p></section>
+          <section><h3>Artist rights</h3><p>I may decline a request and may post commissioned artwork on my social media and portfolio. Please credit me as the artist whenever you post it.</p></section>
+        </div></details>
+        <label class="agreement"><input type="checkbox" name="Terms accepted" value="Yes" required><span>I have read and agree to the Terms of Service.</span></label>
+        <p class="form-note">Submitting opens the secure form service to complete delivery. The first submission may require a one-time email activation.</p>
+        <button class="button primary submit-button" type="submit">Send commission request <span aria-hidden="true">→</span></button>
+      </form>
+    </section>`;
 }
 
-// Finds your photo. It tries the address in posts.js first, then my-picture.jpg / .jpeg / .png / .webp
-// in the images folder and next to index.html, and adds the first one that exists.
-function loadAboutPicture() {
-  const holder = document.querySelector(".about-pic");
-  if (!holder) return;
-  const urls = SITE.aboutPicture ? [SITE.aboutPicture] : [];
-  for (const dir of ["images/", ""]) {
-    for (const ext of ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG"]) urls.push(`${dir}my-picture.${ext}`);
+function setupArtPage() {
+  const slider = document.getElementById("art-slider");
+  const deadline = document.getElementById("deadline");
+  const files = document.getElementById("reference-files");
+  if (deadline) {
+    const d = new Date(); d.setDate(d.getDate() + 7);
+    deadline.min = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
-  const list = [...new Set(urls)];
-  const tryNext = i => {
-    if (i >= list.length) return;   // none found: the "my picture" box stays
-    const im = new Image();
-    im.onload = () => { im.alt = SITE.aboutName || ""; holder.appendChild(im); };
-    im.onerror = () => tryNext(i + 1);
-    im.src = list[i];
-  };
-  tryNext(0);
+  if (files) files.addEventListener("change", () => {
+    if (files.files.length > 5) {
+      alert("Please choose no more than 5 reference pictures.");
+      files.value = "";
+      return;
+    }
+    const total = [...files.files].reduce((sum, f) => sum + f.size, 0);
+    if (total > 10 * 1024 * 1024) {
+      alert("The reference pictures are over 10 MB combined. Please choose smaller files.");
+      files.value = "";
+    }
+  });
+  if (!slider) return;
+  const move = direction => slider.scrollBy({ left: direction * slider.clientWidth * 0.72, behavior: "smooth" });
+  document.getElementById("slide-prev").addEventListener("click", () => move(-1));
+  document.getElementById("slide-next").addEventListener("click", () => move(1));
+  slider.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); move(1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); move(-1); }
+  });
 }
 
-function homePage() {
-  return (
-    section("Introduction", aboutCard()) +
-    section("Latest post", byDate.length ? card(byDate[0]) : `<p class="pad">No posts yet.</p>`)
-  );
-}
-
-// Articles, Art and Daily Life: the posts of that category, in the same order as in posts.js
 function listPage(id) {
-  const items = POSTS.filter(p => catOf(p) === id);
-  const label = SECTIONS.find(s => s.id === id).label;
-  return section(label, items.length ? items.map(card).join("") : `<p class="pad">Nothing here yet. Check back soon.</p>`);
-}
-
-// Updates: every post shows up here like a notification, newest first
-function updatesPage() {
-  return section("Updates", byDate.length
-    ? `<ul class="notes">${byDate.map(p => `
-        <li class="note">${bell}<div>
-          <span class="note-date">${shortDate(p.date)}</span>
-          <p>New ${KIND[catOf(p)] || "post"} posted: <a href="${postUrl(p)}">${p.title}</a></p>
-        </div></li>`).join("")}</ul>`
-    : `<p class="pad">No updates yet.</p>`);
+  if (id === "about") return aboutPage();
+  if (id === "articles") return articlesPage();
+  if (id === "art") return artPage();
+  if (id === "diary") return diaryPage();
+  return updatesPage();
 }
 
 function showSection() {
   const h = location.hash.replace("#", "");
   const id = SECTIONS.some(s => s.id === h) ? h : "home";
-  const label = SECTIONS.find(s => s.id === id).label;
-  document.title = id === "home" ? SITE.name : `${label} - ${SITE.name}`;
-  main.innerHTML = id === "home" ? homePage() : id === "updates" ? updatesPage() : listPage(id);
+  const current = SECTIONS.find(s => s.id === id);
+  document.title = id === "home" ? SITE.name : `${current.label} — ${SITE.name}`;
+  main.innerHTML = id === "home" ? homePage() : listPage(id);
   setActive(id);
-  if (id === "home") loadAboutPicture();
+  if (id === "art") setupArtPage();
 }
 
 const slug = new URLSearchParams(location.search).get("slug");
-
 if (location.pathname.endsWith("post.html")) {
-  // Single post
   const p = POSTS.find(x => x.slug === slug);
   if (p) {
-    const sec = SECTIONS.find(s => s.id === catOf(p)) || SECTIONS[1];
-    document.title = `${p.title} - ${SITE.name}`;
+    const sec = SECTIONS.find(s => s.id === catOf(p)) || SECTIONS[2];
+    document.title = `${p.title} — ${SITE.name}`;
     main.innerHTML = `
-      <section>
-        <h2 class="bar">${p.title}</h2>
-        <article class="entry">
-          <h3 class="entry-title">Posted ${fmt(p.date)}</h3>
-          <div class="entry-body full post">${formatBody(p.body)}</div>
-        </article>
-        <p class="back"><a href="${sectionHref(sec.id)}">Back to ${sec.label}</a></p>
+      <section class="single-post">
+        <a class="back-link" href="${sectionHref(sec.id)}">← Back to ${sec.label}</a>
+        <header class="post-header"><p class="eyebrow">${sec.label} / ${fmt(p.date)}</p><h1>${p.title}</h1><p>${p.summary}</p></header>
+        <article class="post-body">${formatBody(p.body)}</article>
       </section>`;
     setActive(sec.id);
     addComments(p);
   } else {
-    document.title = `Post not found - ${SITE.name}`;
-    main.innerHTML = `
-      <section>
-        <h2 class="bar">Post not found</h2>
-        <p class="pad">That post doesn't exist. Check the link or pick one from the sidebar.</p>
-        <p class="back"><a href="${sectionHref("home")}">Back to Home</a></p>
-      </section>`;
+    document.title = `Post not found — ${SITE.name}`;
+    main.innerHTML = `<section class="empty-state"><h1>Post not found</h1><p>That post doesn’t exist. It may have moved or the link may be incomplete.</p><a class="button primary" href="index.html#articles">Browse articles</a></section>`;
   }
 } else {
   showSection();
-  window.addEventListener("hashchange", () => { showSection(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => {
+    showSection();
+    window.scrollTo({ top: 0, behavior: "instant" });
+    main.focus({ preventScroll: true });
+  });
 }

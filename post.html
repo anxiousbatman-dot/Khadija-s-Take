@@ -3,23 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>my blog</title>
+  <meta name="description" content="An article from Khadija’s Take by Khadija Boughanmi.">
+  <title>Article — Khadija’s Take</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%235b3113'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23fffaf2'%3EK%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <div class="site">
-    <header class="banner">
-      <a class="brand" href="index.html" data-site-name>my blog</a>
+    <header class="site-header">
+      <div class="header-top">
+        <a class="brand" href="index.html#home" aria-label="Khadija’s Take, home">khadija’s take<span class="brand-dot" aria-hidden="true"></span></a>
+        <p class="header-note">Writing · Illustration · Independent work</p>
+      </div>
+      <nav class="file-nav" id="navigation" aria-label="Main navigation"></nav>
     </header>
-    <div class="band"><p data-site-tagline></p></div>
-    <div class="cols">
-      <aside id="sidebar"></aside>
-      <main id="main"></main>
-    </div>
-    <footer>&copy; <span id="year"></span> <span data-site-name>my blog</span></footer>
+    <main id="main" tabindex="-1"></main>
+    <footer>
+      <span>&copy; <span id="year"></span> Khadija’s Take</span>
+      <span>Written and illustrated by Khadija Boughanmi</span>
+    </footer>
   </div>
   <script src="posts.js"></script>
   <script src="app.js"></script>
