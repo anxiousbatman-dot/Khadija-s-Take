@@ -25,7 +25,7 @@ const ARTWORKS = [
   { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT", ratio: 4 / 5 },
   { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT", ratio: 1156 / 1728 },
   { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 600 / 800 },
-  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 600 / 800 }
+  { file: "sketch-02.jpg", title: "Character sketch", type: "Sketch", price: "10 DT", ratio: 4 / 5 }
 ];
 
 const COUNT_API = "https://abacus.jasoncameron.dev";
