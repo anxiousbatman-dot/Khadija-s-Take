@@ -179,6 +179,11 @@ footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1.25
 .art-card figcaption strong { flex: none; color: var(--mauve); }
 .slider-hint { margin: 0; color: var(--muted); font-size: .65rem; }
 
+/* Wide artwork cards: twice the width of a normal card, same height */
+.art-card.wide { flex-basis: calc(2 * clamp(14rem, 24vw, 19rem)); }
+.art-card.wide:hover, .art-card.wide:focus-within { flex-basis: calc(2 * clamp(17rem, 30vw, 24rem)); }
+.art-card.wide .art-image { aspect-ratio: 8 / 5; }
+
 /* Commission sheet */
 .commission-sheet { margin-bottom: clamp(4rem, 8vw, 7rem); padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid var(--espresso); background: var(--paper-deep); }
 .sheet-title { display: flex; justify-content: space-between; gap: 2rem; align-items: end; padding-bottom: 1.8rem; border-bottom: 3px double var(--espresso); }
@@ -284,6 +289,9 @@ footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1.25
   .full-field { grid-column: auto; }
   .art-card { flex-basis: 75vw; }
   .art-card:hover, .art-card:focus-within { flex-basis: 82vw; }
+  /* On phones a double-width card would be wider than the screen, so it is capped at the screen width */
+  .art-card.wide, .art-card.wide:hover, .art-card.wide:focus-within { flex-basis: 90vw; }
+  .art-card.wide .art-image { aspect-ratio: 24 / 25; }
   .post-body { font-size: 1.16rem; }
 }
 

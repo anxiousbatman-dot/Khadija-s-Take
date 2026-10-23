@@ -16,10 +16,10 @@ const SECTIONS = [
 const KIND = { articles: "article", art: "art post", diary: "diary post" };
 
 const ARTWORKS = [
-  { file: "full-body-group.jpg", title: "Full body", type: "Full-body illustration", price: "25 DT" },
-  { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT" },
-  { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT" },
   { file: "angel-full-body.jpg", title: "Full body", type: "Full-body illustration", price: "30 DT" },
+  { file: "full-body-group.jpg", title: "Full body", type: "Full-body illustration", price: "25 DT", wide: true },
+  { file: "rendered-half-body.jpg", title: "Fully rendered half-up", type: "Half-up illustration", price: "20 DT", wide: true },
+  { file: "flat-color-bust.jpg", title: "Flat-colour bust-up", type: "Bust-up illustration", price: "10 DT" },
   { file: "duo-rendered-half-body.jpg", title: "Rendered half-up", type: "Half-up illustration", price: "25 DT" },
   { file: "poster.jpg", title: "Illustrated poster", type: "Poster design", price: "16 DT" },
   { file: "sketch-01.jpg", title: "Character sketch", type: "Sketch", price: "10 DT" },
@@ -145,7 +145,7 @@ const articleCard = (p, featured = false) => `
 
 function aboutPage() {
   return `
-    ${pageHead("Profile / curriculum vitae", "Hello, I’m Khadija.", "Management Sciences student, event coordinator, freelance illustrator, and independent writer based in Tunis.")}
+    ${pageHead("Profile / curriculum vitae", "Hello, I’m Khadija.")}
     <section class="about-layout">
       <div class="about-main">
         <div class="profile-block">
@@ -176,18 +176,18 @@ function aboutPage() {
 
 function articlesPage() {
   const items = POSTS.filter(p => catOf(p) === "articles");
-  return `${pageHead("Notes on society & current affairs", "Articles", "Long-form personal commentary, questions, and perspectives. No noise—just the writing.")}
+  return `${pageHead("Notes on society & current affairs", "Articles")}
     <section class="article-list">${items.length ? items.map(p => articleCard(p)).join("") : `<p>Nothing here yet. Check back soon.</p>`}</section>`;
 }
 
 function diaryPage() {
   const items = POSTS.filter(p => catOf(p) === "diary");
-  return `${pageHead("Personal notebook", "Diary", "Small observations, everyday moments, and work in progress.")}
+  return `${pageHead("Personal notebook", "Diary")}
     <section class="article-list">${items.length ? items.map(p => articleCard(p)).join("") : `<div class="empty-state"><h2>This page is still blank.</h2><p>New diary entries will appear here.</p></div>`}</section>`;
 }
 
 function updatesPage() {
-  return `${pageHead("A quiet notification feed", "Updates", "New posts and portfolio additions, newest first.")}
+  return `${pageHead("Notification feed", "Updates")}
     <section class="conversation" aria-label="Website updates">
       <div class="chat-date">Recent activity</div>
       ${byDate.length ? byDate.map(p => `
@@ -207,13 +207,12 @@ const shortDate = d => {
 
 function artPage() {
   return `
-    ${pageHead("Selected work & commissions", "Art, made personal.", "Browse previous work, compare commission types, and send a detailed request when you’re ready.")}
+    ${pageHead("Selected work & commissions", "Art and commissions")}
     <section class="portfolio-section" aria-labelledby="portfolio-title">
       <div class="section-heading slider-heading"><div><p class="eyebrow">Portfolio / 2026</p><h2 id="portfolio-title">Previous work</h2></div><div class="slider-controls"><button type="button" id="slide-prev" aria-label="Previous artwork">←</button><button type="button" id="slide-next" aria-label="Next artwork">→</button></div></div>
       <div class="art-slider" id="art-slider" tabindex="0" aria-label="Artwork gallery. Scroll horizontally or use the previous and next buttons.">
-        ${ARTWORKS.map((a, i) => `<figure class="art-card"><div class="art-image"><div class="art-placeholder"><span>Artwork ${String(i + 1).padStart(2, "0")}</span><small>${a.file}</small></div><img src="images/${a.file}" alt="${a.title}" loading="lazy" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"></div><figcaption><span>${a.title}</span><strong>${a.price}</strong></figcaption></figure>`).join("")}
+        ${ARTWORKS.map((a, i) => `<figure class="art-card${a.wide ? " wide" : ""}"><div class="art-image"><div class="art-placeholder"><span>Artwork ${String(i + 1).padStart(2, "0")}</span><small>${a.file}</small></div><img src="images/${a.file}" alt="${a.title}" loading="lazy" onload="this.parentElement.classList.add('has-image')" onerror="this.remove()"></div><figcaption><span>${a.title}</span><strong>${a.price}</strong></figcaption></figure>`).join("")}
       </div>
-      <p class="slider-hint">Scroll or use the arrows · hover or focus an artwork to enlarge it</p>
     </section>
     <section class="commission-sheet" aria-labelledby="prices-title">
       <div class="sheet-title"><div><p>Commissions are open</p><h2 id="prices-title">Price list</h2></div><span>Personal use · Prices in Tunisian dinars</span></div>
@@ -236,7 +235,7 @@ function artPage() {
       <div class="can-do"><div><h3>Can do</h3><p>Fan art · Portraits · Original characters</p></div><div><h3>Can’t do</h3><p>Detailed backgrounds · NSFW</p></div></div>
     </section>
     <section class="request-section" id="request" aria-labelledby="request-title">
-      <div class="request-intro"><p class="eyebrow">Start a project</p><h2 id="request-title">Commission request</h2><p>Tell me what you have in mind. Your request will be sent directly to my email, and I’ll reply with availability, a quote, and the next steps.</p><div class="process-note"><span>01</span><p>Send references and details</p><span>02</span><p>Approve the sketch</p><span>03</span><p>Receive your artwork</p></div></div>
+      <div class="request-intro"><p class="eyebrow">Start a project</p><h2 id="request-title">Commission request</h2><div class="process-note"><span>01</span><p>Send references and details</p><span>02</span><p>Approve the sketch</p><span>03</span><p>Receive your artwork</p></div></div>
       <form class="commission-form" action="https://formsubmit.co/${SITE.commissionEmail}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="_subject" value="New art commission request — Khadija’s Take">
         <input type="hidden" name="_template" value="table">
